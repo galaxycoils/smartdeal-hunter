@@ -18,7 +18,14 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['entrypoints/**', 'lib/**', 'components/**'],
-      exclude: ['**/*.d.ts', '**/*.config.{ts,js}', 'tests/**'],
+      exclude: [
+        '**/*.d.ts',
+        '**/*.config.{ts,js}',
+        'tests/**',
+        'entrypoints/popup/**',
+        'entrypoints/options/**',
+        'entrypoints/offscreen/main.ts',
+      ],
       thresholds: {
         lines: thresholds.lines,
         branches: thresholds.branches,

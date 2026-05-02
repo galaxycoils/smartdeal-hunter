@@ -14,18 +14,18 @@ Mirrors the `Tech Stack & Architecture` sheet of the spec. Keep in sync.
 
 ## Message-passing flow (Quick Scout)
 
-| #   | From           | To             | Type            | Payload                                                       |
-| --- | -------------- | -------------- | --------------- | ------------------------------------------------------------- |
-| 1   | User           | Popup          | CLICK           | Trigger Scout on active tab                                   |
-| 2   | Popup          | Background     | SCRAPE_REQUEST  | `{ tabId, action: 'analyzeProduct' }`                         |
-| 3   | Background     | Content Script | EXECUTE_SCRAPER | inject scraper via `scripting.executeScript`                  |
-| 4   | Content Script | Background     | PRODUCT_DATA    | `{ asin, title, price, rating, reviewCount, jsonLd, url }`    |
-| 5   | Background     | Offscreen      | COMPUTE_SCORES  | `{ productData, genomeVector }`                               |
-| 6   | Offscreen      | Background     | SCORE_RESULT    | `{ trueValue: 78, personalFit: 82, breakdown: {…} }`          |
-| 7   | Background     | Content Script | RENDER_PANEL    | score data + alternative suggestions                          |
-| 8   | User           | Content Script | FEEDBACK        | `{ action: 'notInterested' \| 'saved' \| 'purchased', asin }` |
-| 9   | Content Script | Background     | UPDATE_GENOME   | feedback vector for gradient update                           |
-| 10  | Background     | Popup          | SYNC_STATE      | updated Genome + recent analyses list                         |
+| #   | From           | To             | Type            | Payload                                                                                                                                                                   |
+| --- | -------------- | -------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | User           | Popup          | CLICK           | Trigger Scout on active tab                                                                                                                                               |
+| 2   | Popup          | Background     | SCRAPE_REQUEST  | `{ tabId, action: 'analyzeProduct' }`                                                                                                                                     |
+| 3   | Background     | Content Script | EXECUTE_SCRAPER | inject scraper via `scripting.executeScript`                                                                                                                              |
+| 4   | Content Script | Background     | PRODUCT_DATA    | `{ asin, title, price, rating, reviewCount, jsonLd, url }`                                                                                                                |
+| 5   | Background     | Offscreen      | COMPUTE_SCORES  | `{ productData, genomeVector }`                                                                                                                                           |
+| 6   | Offscreen      | Background     | SCORE_RESULT    | `{ trueValue: 78, personalFit: 82, breakdown: {…} }`                                                                                                                      |
+| 7   | Background     | Content Script | RENDER_PANEL    | runtime.sendMessage to the same static content script (matches https://_.amazon.com/_); content script renders Shadow-DOM panel with score data + alternative suggestions |
+| 8   | User           | Content Script | FEEDBACK        | `{ action: 'notInterested' \| 'saved' \| 'purchased', asin }`                                                                                                             |
+| 9   | Content Script | Background     | UPDATE_GENOME   | feedback vector for gradient update                                                                                                                                       |
+| 10  | Background     | Popup          | SYNC_STATE      | updated Genome + recent analyses list                                                                                                                                     |
 
 ## Security & encryption model
 
@@ -43,4 +43,6 @@ Mirrors the `Tech Stack & Architecture` sheet of the spec. Keep in sync.
 - [ ] Concrete typed message schema in `lib/messaging/`
 - [ ] Encrypted storage wrapper API in `lib/storage/`
 - [ ] Offscreen lifecycle manager in `entrypoints/background.ts` + `lib/offscreen/`
+- [ ] Diagram of execution path (mermaid)
+      ckground.ts`+`lib/offscreen/`
 - [ ] Diagram of execution path (mermaid)
