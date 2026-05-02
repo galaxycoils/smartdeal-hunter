@@ -1,12 +1,9 @@
 {
-  "lines": 50,
-  "branches": 50,
-  "functions": 50,
-  "statements": 50,
-  "_ratchet_plan": [
-    "0% at bootstrap (P1.1)",
-    "50% after P1.5 (Genome Engine data model)",
-    "70% after P1.10 (Scout Result Panel)",
-    "90% before Chrome Web Store submission (P1.15)"
-  ]
+  "global": {
+    "statements": 70,
+    "branches": 70,
+    "functions": 70,
+    "lines": 70
+  },
+  "_ratchet_plan": "Bootstrap 0% -> P1.5 50% -> P1.10 70% -> P1.15 90%"
 }

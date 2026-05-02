@@ -8,6 +8,20 @@ export interface ProductDataResponse {
   payload: ProductData | null;
 }
 
+export interface ScrapeRequest {
+  type: 'SCRAPE_REQUEST';
+  tabId?: number;
+}
+
+export interface RenderPanelMessage {
+  type: 'RENDER_PANEL';
+  payload: {
+    asin: string;
+    trueValue: number;
+    personalFit: number;
+  };
+}
+
 export interface ComputeScoresRequest {
   type: 'COMPUTE_SCORES';
   payload: { productData: ProductData; genome: Genome };
@@ -33,5 +47,7 @@ export type ContentMessage =
   | ProductDataResponse
   | ComputeScoresRequest
   | ScoreResultResponse
-  | ComputeScoresError;
+  | ComputeScoresError
+  | RenderPanelMessage;
 export type OffscreenMessage = ComputeScoresRequest | ScoreResultResponse | ComputeScoresError;
+export type PopupMessage = ScrapeRequest;
