@@ -12,21 +12,24 @@ Before doing ANYTHING in this repo, read these files in order:
 
 ## Current state (2026-05-02)
 
-Batches 1 through 5 (P1.2 - P1.12) are **DONE and COMMITTED**.
+Batches 1 through 6 (P1.2 - P1.14) are **DONE and COMMITTED**.
 
 - **P1.11**: Feedback Loop Engine.
 - **P1.12**: Product Cache & Indexing.
-- All tests pass (78/78). Lint clean.
-- Coverage threshold: **70/70/70/70** achieved and enforced in `.coverage-thresholds.json`.
+- **P1.13**: Privacy & Compliance Shell (Options Page: Export/Wipe).
+- **P1.14**: E2E Integration Tests (Playwright setup + fixture-based test).
+- All unit/integration tests pass (78/78). Lint clean.
+- Coverage: **81% Statements** (threshold 70% maintained).
+- E2E: Playwright setup ready in `tests/e2e/`. Requires `pnpm build` to run locally.
 
-## Next Task: Phase 1 Batch 6
+## Next Task: Phase 1 Batch 7
 
-We are now ready for **Batch 6**:
+We are now ready for **Batch 7**:
 
-- **Task P1.13**: Privacy & Compliance Shell (Depends on P1.2).
-- **Task P1.14**: E2E Integration Tests (Depends on P1.10, P1.13).
+- **Task P1.15**: Bundle Optimization & Store Prep (Depends on P1.14).
+- Final Polish & CWS Dev Submission.
 
-**First step**: Create `conductor/plan-batch6.md` and run the plan-review-gate.
+**First step**: Create `conductor/plan-batch7.md` and run the plan-review-gate.
 
 ## Hard rules (from CLAUDE.md)
 

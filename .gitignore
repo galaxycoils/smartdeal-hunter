@@ -17,6 +17,8 @@ web-ext.config.ts
 # Test/coverage
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
 
 # Env / secrets
 .env

@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     setupFiles: ['./tests/setup.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -21,7 +22,7 @@ export default defineConfig({
       exclude: [
         '**/*.d.ts',
         '**/*.config.{ts,js}',
-        'tests/**',
+        'tests/e2e/**',
         'entrypoints/popup/**',
         'entrypoints/options/**',
         'entrypoints/offscreen/main.ts',

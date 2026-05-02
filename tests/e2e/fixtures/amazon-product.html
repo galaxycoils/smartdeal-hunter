@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Amazon.com: Mock Premium Wireless Headphones</title>
+  </head>
+  <body>
+    <!-- Minimal DOM mimicking Amazon for scraper tests -->
+    <div id="dp">
+      <span id="productTitle">Mock Premium Wireless Headphones</span>
+      <span class="a-price"><span class="a-offscreen">$129.99</span></span>
+
+      <div id="acrPopover" title="4.5 out of 5 stars">
+        <span class="a-icon-alt">4.5 out of 5 stars</span>
+      </div>
+      <span id="acrCustomerReviewText">1,234 ratings</span>
+
+      <img
+        id="landingImage"
+        src="https://m.media-amazon.com/images/I/mock-image.jpg"
+        alt="Headphones"
+      />
+    </div>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Mock Premium Wireless Headphones",
+        "image": "https://m.media-amazon.com/images/I/mock-image.jpg",
+        "description": "High-quality wireless headphones.",
+        "brand": {
+          "@type": "Brand",
+          "name": "Premium"
+        },
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "USD",
+          "price": "129.99"
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -50,6 +50,10 @@ export interface UpdateGenomeRequest {
   };
 }
 
+export interface DataWipedMessage {
+  type: 'DATA_WIPED';
+}
+
 export type ContentMessage =
   | ExecuteScraperRequest
   | ProductDataResponse
@@ -57,6 +61,11 @@ export type ContentMessage =
   | ScoreResultResponse
   | ComputeScoresError
   | RenderPanelMessage
-  | UpdateGenomeRequest;
-export type OffscreenMessage = ComputeScoresRequest | ScoreResultResponse | ComputeScoresError;
-export type PopupMessage = ScrapeRequest;
+  | UpdateGenomeRequest
+  | DataWipedMessage;
+export type OffscreenMessage =
+  | ComputeScoresRequest
+  | ScoreResultResponse
+  | ComputeScoresError
+  | DataWipedMessage;
+export type PopupMessage = ScrapeRequest | DataWipedMessage;
