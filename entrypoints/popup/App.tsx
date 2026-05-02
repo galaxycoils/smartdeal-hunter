@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Onboarding } from './Onboarding';
+import { Dashboard } from './Dashboard';
 import { loadGenome } from '../../lib/genome';
 import { deriveKey } from '../../lib/crypto';
 import type { Genome } from '../../lib/types';
@@ -45,16 +46,11 @@ function App() {
     return <Onboarding cryptoKey={cryptoKey} onComplete={handleOnboardingComplete} />;
   }
 
-  return (
-    <main className="popup-bootstrap p-4">
-      <h1 className="text-xl font-bold">SmartDeal Hunter</h1>
-      <p className="text-sm text-gray-600">Genome active and ready.</p>
-      <div className="mt-4 p-3 bg-green-50 rounded-md border border-green-100">
-        <p className="text-xs text-green-800 font-medium">ONBOARDED ✓</p>
-      </div>
-      <p className="mt-4 text-xs text-gray-500 italic">Dashboard coming in P1.9.</p>
-    </main>
-  );
+  if (genome) {
+    return <Dashboard genome={genome} />;
+  }
+
+  return null;
 }
 
 export default App;
