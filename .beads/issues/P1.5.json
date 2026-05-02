@@ -1,0 +1,12 @@
+{
+  "id": "P1.5",
+  "title": "Genome Engine — Data Model (8–12-dim preference vector, encrypted CRUD)",
+  "description": "Define the Personal Fit Genome data model in lib/genome/. Preference vector: 8–12 dimensions (e.g. price-sensitivity, eco-preference, brand-trust, quality-weight, novelty, review-skepticism, speed, bundle-affinity). CRUD operations backed by the Storage layer (P1.2): loadGenome(), saveGenome(), resetGenome(). All data encrypted at rest. TypeScript types exported for downstream consumers (P1.7, P1.8). Coverage floor rises to 50% in this PR. TDD required.",
+  "phase": 1,
+  "week": 3,
+  "hours": 16,
+  "owner": "Backend",
+  "depends_on": ["P1.2"],
+  "status": "open",
+  "commit": null
+}

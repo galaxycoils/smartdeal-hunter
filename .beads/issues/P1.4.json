@@ -1,0 +1,12 @@
+{
+  "id": "P1.4",
+  "title": "Content Script — Amazon Scraper (URL ASIN → JSON-LD → DOM)",
+  "description": "Implement entrypoints/content.ts. Product extraction priority order: (1) URL ASIN detection via /dp/ and /gp/product/ patterns, (2) JSON-LD Schema.org parsing, (3) conservative DOM fallback selectors. Extracted payload: { asin, title, price, rating, reviewCount, jsonLd, url }. No auto-scraping — extraction fires only on EXECUTE_SCRAPER message from background SW. Inject Scout Result panel into page DOM via Shadow DOM (CSP-safe). Unit tests for each extraction strategy with mock HTML fixtures (TDD).",
+  "phase": 1,
+  "week": 2,
+  "hours": 20,
+  "owner": "Frontend",
+  "depends_on": ["P1.3"],
+  "status": "open",
+  "commit": null
+}

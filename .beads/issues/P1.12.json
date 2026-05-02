@@ -1,0 +1,12 @@
+{
+  "id": "P1.12",
+  "title": "Product Cache & Indexing (IndexedDB, 7-day TTL, 50 MB LRU)",
+  "description": "Implement the product analysis cache in lib/cache/. Backend: IndexedDB (via the storage wrapper from P1.2). TTL: 7 days — stale entries evicted on read. Size cap: 50 MB LRU eviction when storage exceeds budget. Cache keys: ASIN + scrape-date. Stored values: encrypted product data + score breakdown. Enables faster re-analysis and offline access to recent results. Exposes: getCached(), putCached(), evictExpired(), estimateSize(). TDD for TTL eviction and LRU ordering.",
+  "phase": 1,
+  "week": 6,
+  "hours": 12,
+  "owner": "Backend",
+  "depends_on": ["P1.2", "P1.4"],
+  "status": "open",
+  "commit": null
+}

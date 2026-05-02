@@ -1,0 +1,12 @@
+{
+  "id": "P1.3",
+  "title": "Background Service Worker + offscreen lifecycle manager",
+  "description": "Implement entrypoints/background.ts as the MV3 service worker. Responsibilities: event routing, storage orchestration, offscreen document lifecycle (create on demand, destroy when idle), chrome.runtime message hub. Must not store any state in module-level globals — all state persisted to chrome.storage.local. Implement lib/offscreen/ helpers for spawning and messaging the offscreen document. Unit tests for message dispatch and offscreen lifecycle (TDD). Worker must survive idle termination and resume correctly.",
+  "phase": 1,
+  "week": 2,
+  "hours": 16,
+  "owner": "Backend",
+  "depends_on": ["P1.1"],
+  "status": "open",
+  "commit": null
+}

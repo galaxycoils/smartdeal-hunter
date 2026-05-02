@@ -1,0 +1,12 @@
+{
+  "id": "P1.6",
+  "title": "Onboarding Flow UI (multi-step wizard, Likert sliders, accessible)",
+  "description": "Build the first-run onboarding wizard in entrypoints/popup/ or a dedicated onboarding entrypoint. Multi-step flow: welcome + consent screen ('I understand' required before proceeding), then one screen per Genome dimension with Likert sliders (1–5). Accessible (ARIA, keyboard navigation, focus management). Persists partial state so the user can resume if popup closes mid-flow. On completion, calls saveGenome() with the collected preference vector. Requires Genome data model (P1.5). TDD for form logic and state persistence.",
+  "phase": 1,
+  "week": 3,
+  "hours": 20,
+  "owner": "Frontend",
+  "depends_on": ["P1.5"],
+  "status": "open",
+  "commit": null
+}

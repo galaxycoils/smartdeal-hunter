@@ -1,0 +1,12 @@
+{
+  "id": "P2.8",
+  "title": "Advanced Privacy Controls (toggles, audit log, scheduled wipe)",
+  "description": "Extend Options > Privacy (P2.1) with advanced controls: (1) per-feature data-collection toggles (product caching on/off, ML offscreen on/off, Deep Check on/off); (2) activity audit log — timestamped list of analysis events stored locally, max 100 entries, user-clearable; (3) scheduled wipe — set a recurring wipe interval (daily / weekly / monthly) using chrome.alarms; (4) granular export — export only specific data categories. All new storage paths use the encrypted storage layer (P1.2). TDD for alarm scheduling, toggle enforcement, and audit-log rotation.",
+  "phase": 2,
+  "week": 12,
+  "hours": 14,
+  "owner": "Frontend",
+  "depends_on": ["P2.1"],
+  "status": "open",
+  "commit": null
+}

@@ -1,0 +1,12 @@
+{
+  "id": "P2.4",
+  "title": "Ethical Bundle Optimizer (local co-occurrence matrix, rationales)",
+  "description": "Implement the Ethical Bundle Optimizer in lib/bundle/. Builds a local co-occurrence matrix from the user's saved/purchased product history (no external data). Suggests 2–3 complementary items when viewing a product. Each suggestion must include a human-readable rationale (e.g. 'Frequently bought together by users with similar eco-preference scores'). No affiliate links ever injected (compliance hard rule). Local-only: zero remote calls. Acceptance criterion: ≥ 15% suggestion acceptance rate in simulated user study. TDD for co-occurrence matrix construction and rationale generation.",
+  "phase": 2,
+  "week": 10,
+  "hours": 24,
+  "owner": "ML",
+  "depends_on": ["P1.7", "P1.8"],
+  "status": "open",
+  "commit": null
+}

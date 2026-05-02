@@ -1,0 +1,12 @@
+{
+  "id": "P1.9",
+  "title": "Popup Dashboard UI (Quick Scout, Genome summary, recent analyses)",
+  "description": "Build the main popup UI in entrypoints/popup/. Sections: (1) Quick Scout button — triggers SCRAPE_REQUEST to background SW; (2) Genome summary — compact view of top 3–4 preference dimensions with mini-bars; (3) Recent analyses — list of last N scored products with True Value + Personal Fit chips. Uses shadcn/ui components (import only used components for bundle budget). Closes onboarding flow on first run. State synced from background via SYNC_STATE message. Privacy notice link in footer. TDD for UI state logic.",
+  "phase": 1,
+  "week": 5,
+  "hours": 20,
+  "owner": "Frontend",
+  "depends_on": ["P1.6"],
+  "status": "open",
+  "commit": null
+}

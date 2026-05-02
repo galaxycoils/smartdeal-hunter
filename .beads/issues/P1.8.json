@@ -1,0 +1,12 @@
+{
+  "id": "P1.8",
+  "title": "Personal Fit Score (cosine sim Genome × product attribute vector)",
+  "description": "Implement the Personal Fit Score in lib/scoring/. Algorithm: cosine similarity between the user's Genome vector (P1.5) and the product's attribute vector derived from scraped data (P1.4) + True Value breakdown (P1.7). Output: { personalFit: number 0–100 }. Combined with True Value in SCORE_RESULT message returned to background SW. On-device inference only — no remote calls. TDD with fixture Genome vectors and product attribute matrices.",
+  "phase": 1,
+  "week": 4,
+  "hours": 20,
+  "owner": "ML",
+  "depends_on": ["P1.5", "P1.7"],
+  "status": "open",
+  "commit": null
+}

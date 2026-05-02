@@ -1,0 +1,12 @@
+{
+  "id": "P2.9",
+  "title": "Cross-Page Genome Sync (storage.onChanged, versioning)",
+  "description": "Implement cross-context Genome synchronisation in lib/genome/sync.ts. Uses chrome.storage.onChanged listener so popup, options page, content script panel, and background SW all stay in sync without polling. Schema versioning: include a version field in the stored Genome; migration function for future schema changes. Handles concurrent writes (last-write-wins with timestamp). Requires Genome Editor (P2.2) to be complete so the Options page can trigger changes. TDD for onChanged propagation and version migration.",
+  "phase": 2,
+  "week": 13,
+  "hours": 12,
+  "owner": "Backend",
+  "depends_on": ["P2.2"],
+  "status": "open",
+  "commit": null
+}

@@ -1,0 +1,12 @@
+{
+  "id": "P2.10",
+  "title": "Performance & Regression Testing (Lighthouse, ML benchmarks, stress)",
+  "description": "Comprehensive performance and regression test suite. Tasks: (1) Lighthouse CI audit on popup and options pages (target LCP < 1.5 s, CLS < 0.1); (2) ML benchmark: run True Value + Personal Fit scoring on 50-product fixture dataset, assert p95 latency < 500 ms; (3) bundle size regression gate: assert total < 2.5 MB; (4) storage stress test: fill cache to 50 MB limit, verify LRU eviction; (5) Deep Check rate-limit stress test: verify 10/min ceiling holds; (6) Playwright regression suite — re-run full E2E (P1.14) plus Phase 2 flows. All gates must pass before P2.11.",
+  "phase": 2,
+  "week": 13,
+  "hours": 16,
+  "owner": "QA",
+  "depends_on": ["P2.5", "P2.7"],
+  "status": "open",
+  "commit": null
+}

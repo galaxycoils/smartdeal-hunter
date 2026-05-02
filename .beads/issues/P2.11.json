@@ -1,0 +1,12 @@
+{
+  "id": "P2.11",
+  "title": "Store Release & Monitoring (prod build, error tracking)",
+  "description": "Final production release milestone. Tasks: (1) production build with all optimisations (minify, tree-shake, ONNX int8 models, code-split); (2) update CWS listing from dev channel to production; (3) finalize privacy policy and store description; (4) configure lightweight client-side error tracking (crash reporter using chrome.runtime.onSuspend + local error log — no remote analytics); (5) set up post-release monitoring checklist (1-day, 7-day, 30-day review gates); (6) tag release in git; (7) document extension support and update process. Coverage: 90% gate must be green.",
+  "phase": 2,
+  "week": 14,
+  "hours": 16,
+  "owner": "Tech Lead",
+  "depends_on": ["P2.10"],
+  "status": "open",
+  "commit": null
+}

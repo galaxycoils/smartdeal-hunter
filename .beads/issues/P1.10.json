@@ -1,0 +1,12 @@
+{
+  "id": "P1.10",
+  "title": "Scout Result Panel (radar chart, alternatives, feedback buttons)",
+  "description": "Build the in-page Scout Result panel injected into Amazon product pages via Shadow DOM. Components: (1) radar/spider chart visualising True Value dimensions (P1.7); (2) Personal Fit score gauge (P1.8); (3) alternative product suggestions (top 3 by combined score); (4) feedback buttons: 'Not Interested', 'Saved', 'Purchased' — each sends UPDATE_GENOME to background. Panel mounted via createRoot in Shadow DOM (React 19 stable API). Coverage floor rises to 70% in this PR. TDD for panel rendering and feedback dispatch.",
+  "phase": 1,
+  "week": 5,
+  "hours": 20,
+  "owner": "Frontend",
+  "depends_on": ["P1.7", "P1.8", "P1.9"],
+  "status": "open",
+  "commit": null
+}

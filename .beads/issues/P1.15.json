@@ -1,0 +1,12 @@
+{
+  "id": "P1.15",
+  "title": "Bundle Optimization & Store Prep (< 2.5 MB, screenshots, CWS dev submit)",
+  "description": "Final Phase 1 milestone. Tasks: (1) run Vite bundle analysis, enforce < 2.5 MB total; (2) tree-shake shadcn/ui — only used components; (3) dynamic-import ML modules; (4) verify int8-quantised ONNX model size; (5) generate Chrome Web Store assets: 5 screenshots (1280×800), 440×280 promo tile, store description; (6) draft privacy policy and host at public URL; (7) penetration-test storage encryption (ciphertext audit); (8) complete CWS developer checklist; (9) submit to CWS dev channel. Coverage floor rises to 90% in this PR (or confirmed path to 90%).",
+  "phase": 1,
+  "week": 8,
+  "hours": 20,
+  "owner": "Tech Lead",
+  "depends_on": ["P1.14"],
+  "status": "open",
+  "commit": null
+}

@@ -1,0 +1,12 @@
+{
+  "id": "P1.14",
+  "title": "E2E Integration Tests (Playwright: install → onboard → scrape → score → export → wipe)",
+  "description": "Write the full Playwright E2E suite covering the golden path: (1) load extension in Chromium; (2) complete onboarding wizard; (3) navigate to a mock Amazon product page; (4) trigger Quick Scout; (5) verify Scout Result panel renders with scores; (6) submit feedback; (7) export data and verify JSON structure; (8) perform secure wipe and verify storage is empty. Also test: extension survives background SW idle termination, CSP compliance (no inline scripts), zero external network requests (proxy check). All tests must be green before P1.15.",
+  "phase": 1,
+  "week": 7,
+  "hours": 20,
+  "owner": "QA",
+  "depends_on": ["P1.10", "P1.13"],
+  "status": "open",
+  "commit": null
+}

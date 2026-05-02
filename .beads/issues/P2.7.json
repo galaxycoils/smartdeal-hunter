@@ -1,0 +1,12 @@
+{
+  "id": "P2.7",
+  "title": "Deep Check Integration (PA-API live data, 1-hr cache, 10/min rate)",
+  "description": "Implement the Deep Check flow in lib/deepcheck/. Triggered only by explicit user action (button in Scout Result panel or Options page). Calls PA-API 5.0 GetItems endpoint (P2.6 OAuth) to fetch live price, availability, and review summary. Responses cached for 1 hour to reduce API calls (per Amazon TOS). Rate limit: 10 requests/min enforced. Results merged with local True Value score for enhanced 'Deep Check Score'. Only external API call in MVP — must be behind the Deep Check toggle (disabled by default). TDD for API response parsing, cache logic, and rate limiting.",
+  "phase": 2,
+  "week": 12,
+  "hours": 20,
+  "owner": "Backend",
+  "depends_on": ["P2.6"],
+  "status": "open",
+  "commit": null
+}

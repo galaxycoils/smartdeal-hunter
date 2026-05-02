@@ -1,0 +1,12 @@
+{
+  "id": "P2.2",
+  "title": "Genome Editor UI (sliders, weight adjustments, JSON import/export)",
+  "description": "Build the Genome Editor within Options > Genome tab (P2.1). Features: per-dimension labelled sliders with current value display, relative weight adjustment (drag-to-reorder or +/- nudge), reset-to-defaults button, JSON import (paste or file upload) with schema validation, JSON export to clipboard or file. Live preview of how a hypothetical product would score with the current Genome. All edits call saveGenome() and trigger SYNC_STATE. TDD for import validation, export format, and weight normalisation.",
+  "phase": 2,
+  "week": 9,
+  "hours": 16,
+  "owner": "Frontend",
+  "depends_on": ["P2.1"],
+  "status": "open",
+  "commit": null
+}

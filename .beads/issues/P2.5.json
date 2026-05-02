@@ -1,0 +1,12 @@
+{
+  "id": "P2.5",
+  "title": "Bundle UI Panel (Frequently Bought Together, individual scores)",
+  "description": "Build the Bundle UI Panel in the Scout Result panel or as a collapsible section below it. Displays: 'Smart Bundles' heading, up to 3 suggested complementary items from the Ethical Bundle Optimizer (P2.4), each with thumbnail (from cached product data), True Value + Personal Fit mini-scores, and the rationale string. 'Why this?' tooltip for each item. No add-to-cart auto-action — suggestions are informational only. Consistent with Scout Result Panel design tokens (P1.10). TDD for bundle item rendering and score display.",
+  "phase": 2,
+  "week": 11,
+  "hours": 16,
+  "owner": "Frontend",
+  "depends_on": ["P2.4"],
+  "status": "open",
+  "commit": null
+}

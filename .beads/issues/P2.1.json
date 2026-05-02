@@ -1,0 +1,12 @@
+{
+  "id": "P2.1",
+  "title": "Options Page Architecture (Tabs: Settings/Privacy/Genome/DeepCheck/About)",
+  "description": "Build the full Options Page SPA in entrypoints/options/. Five tab structure: (1) Settings — extension preferences, theme, language; (2) Privacy — view/export/wipe controls (promotes P1.13 shell to full page); (3) Genome — links to Genome Editor (P2.2); (4) Deep Check — Amazon Creators API toggle + OAuth entry (P2.6); (5) About — version, changelog, policy links. React 19 + shadcn/ui. State from chrome.storage (not localStorage). Prefer chrome.storage.sync for cross-device settings, chrome.storage.local for sensitive data. TDD for tab routing and state loading.",
+  "phase": 2,
+  "week": 9,
+  "hours": 16,
+  "owner": "Frontend",
+  "depends_on": ["P1.9"],
+  "status": "open",
+  "commit": null
+}

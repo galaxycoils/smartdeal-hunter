@@ -1,0 +1,12 @@
+{
+  "id": "P1.7",
+  "title": "True Value Score Algorithm (price/unit, ratings, brand trust, seasonal adj.)",
+  "description": "Implement the True Value Score in lib/scoring/ (runs in offscreen document via ONNX Runtime Web). Inputs: scraped product data (P1.4) + Genome vector (P1.5). Scoring dimensions: price-per-unit normalisation, rating quality (count-weighted), brand-trust heuristic, seasonal price adjustment. Output: { trueValue: number 0–100, breakdown: Record<string, number> }. Target latency: < 500 ms per product on 50-product benchmark. Quantised (int8) ONNX model if ML path used; fallback to pure-JS heuristics (WebNN → WASM → JS). TDD for scoring logic with fixture data.",
+  "phase": 1,
+  "week": 4,
+  "hours": 24,
+  "owner": "ML",
+  "depends_on": ["P1.4", "P1.5"],
+  "status": "open",
+  "commit": null
+}

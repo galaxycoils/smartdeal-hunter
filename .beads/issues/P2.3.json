@@ -1,0 +1,12 @@
+{
+  "id": "P2.3",
+  "title": "Analysis Cache Manager (TTL, manual flush, prefetch)",
+  "description": "Extend the Product Cache (P1.12) with a management layer in lib/cache/manager.ts. Features: TTL enforcement (7-day read-through eviction with configurable override), manual flush via Options > Privacy, prefetch heuristic (pre-warm cache for products in current search results page), cache size dashboard (MB used / quota). Exposes storageStats() for the Options page. Backed by same IndexedDB store as P1.12 — no schema migration needed. TDD for flush, prefetch trigger, and stats reporting.",
+  "phase": 2,
+  "week": 10,
+  "hours": 14,
+  "owner": "Backend",
+  "depends_on": ["P1.12"],
+  "status": "open",
+  "commit": null
+}

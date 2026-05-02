@@ -1,0 +1,12 @@
+{
+  "id": "P2.6",
+  "title": "Amazon Creators API — OAuth (PA-API 5.0, item-lookup scope only)",
+  "description": "Implement Amazon Product Advertising API 5.0 (PA-API) integration in lib/deepcheck/auth.ts. OAuth flow: redirect user to Amazon auth endpoint from Options > Deep Check tab (P2.1), receive and securely store access token (encrypted via P1.2 storage layer). Scopes: item-lookup only — no write permissions, no order access, no personal data. Token refresh logic. Per-call rate limiting: max 10 requests/min enforced client-side. All API calls HTTPS only. TDD for OAuth token storage, refresh, and rate-limit enforcement.",
+  "phase": 2,
+  "week": 11,
+  "hours": 20,
+  "owner": "Backend",
+  "depends_on": ["P2.1"],
+  "status": "open",
+  "commit": null
+}

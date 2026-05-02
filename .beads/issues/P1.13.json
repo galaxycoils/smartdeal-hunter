@@ -1,0 +1,12 @@
+{
+  "id": "P1.13",
+  "title": "Privacy & Compliance Shell (Notice, Export, Wipe)",
+  "description": "Implement the privacy controls shell in entrypoints/options/ Privacy tab (or a dedicated options page if P2.1 not yet started). Required controls per compliance matrix: (1) View all stored data — JSON preview modal; (2) Export to JSON — triggers download of genome.json; (3) Secure data wipe — confirm dialog → overwrite all encrypted blobs → delete IndexedDB + chrome.storage entries; (4) Disable Deep Check toggle (blocked until Phase 2, but scaffold the UI). Privacy notice text visible within 1 click. Onboarding consent record stored and verified. TDD for export and wipe logic.",
+  "phase": 1,
+  "week": 7,
+  "hours": 16,
+  "owner": "Frontend",
+  "depends_on": ["P1.2"],
+  "status": "open",
+  "commit": null
+}

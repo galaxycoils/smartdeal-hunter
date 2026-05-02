@@ -1,0 +1,12 @@
+{
+  "id": "P1.11",
+  "title": "Feedback Loop Engine (gradient descent on Genome, conservative LR)",
+  "description": "Implement the online learning loop in lib/genome/feedback.ts. On each user feedback event (not-interested / saved / purchased), apply a small gradient-descent update to the Genome vector. Learning rate must be conservative (≤ 0.05) to avoid preference drift. Uses cosine-similarity loss. Updated vector persisted via saveGenome() (P1.5) and broadcast via SYNC_STATE. Multi-Armed Bandit exploration layer for balancing exploitation of known preferences vs. discovery. TDD with synthetic feedback sequences.",
+  "phase": 1,
+  "week": 6,
+  "hours": 16,
+  "owner": "ML",
+  "depends_on": ["P1.8", "P1.10"],
+  "status": "open",
+  "commit": null
+}

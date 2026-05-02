@@ -1,0 +1,12 @@
+{
+  "id": "P1.1",
+  "title": "Project Bootstrap & WXT Setup",
+  "description": "Initialise the repository with WXT + Vite + React 19 + TypeScript strict mode. Configure Manifest V3 skeleton (background SW, content script, popup, options, offscreen entry points). Set up ESLint, Prettier, Husky, pnpm workspaces, Vitest, shadcn/ui, and all dev tooling. Establish the path map (entrypoints/, lib/, components/, docs/). Publish first passing CI run. Coverage floor: 0%.",
+  "phase": 1,
+  "week": 1,
+  "hours": 16,
+  "owner": "Tech Lead",
+  "depends_on": [],
+  "status": "done",
+  "commit": "4a59701"
+}

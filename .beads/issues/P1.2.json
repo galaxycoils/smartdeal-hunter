@@ -1,0 +1,12 @@
+{
+  "id": "P1.2",
+  "title": "Storage & Encryption Layer (AES-GCM-256, PBKDF2 600K, IndexedDB wrapper)",
+  "description": "Implement the encrypted storage layer in lib/storage/. Key derivation: PBKDF2-SHA-256 with 600 000 iterations (OWASP 2023). Symmetric cipher: AES-GCM-256. IV: crypto.getRandomValues(12) — never reused per key. Derived keys held in memory only, never persisted. IndexedDB wrapper for structured objects (Genome, product cache). chrome.storage.local adapter for small settings. Exported API: encrypt(), decrypt(), put(), get(), del(), wipe(). Unit tests for every encryption path (TDD).",
+  "phase": 1,
+  "week": 1,
+  "hours": 20,
+  "owner": "Tech Lead",
+  "depends_on": ["P1.1"],
+  "status": "open",
+  "commit": null
+}
