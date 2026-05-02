@@ -77,7 +77,7 @@ export const calculateTrueValue = (data: ProductData): number => {
 /**
  * Maps ProductData to a ProductAttributeVector for personal fit calculation
  */
-const toAttributeVector = (data: ProductData): ProductAttributeVector => {
+export const toAttributeVector = (data: ProductData): ProductAttributeVector => {
   const ratingStrength = calculateRatingStrength(data.rating, data.reviewCount);
   const brand = extractBrand(data);
   const brandTrust = BRAND_TRUST_MAP[brand] || BRAND_TRUST_MAP['Generic'];

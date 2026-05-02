@@ -37,7 +37,12 @@ export default defineContentScript({
                 trueValue: Math.round(payload.trueValue),
                 personalFit: Math.round(payload.personalFit),
                 onClose: () => uiInstance?.remove(),
-                onFeedback: (type) => console.log('Feedback:', type),
+                onFeedback: (type) => {
+                  browser.runtime.sendMessage({
+                    type: 'UPDATE_GENOME',
+                    payload: { asin: payload.asin, feedbackType: type },
+                  });
+                },
               }),
             );
             return root;

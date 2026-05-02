@@ -6,9 +6,13 @@ import type {
   ComputeScoresRequest,
   ScoreResultResponse,
   RenderPanelMessage,
+  UpdateGenomeRequest,
 } from '../lib/messaging/types';
-import { loadGenome } from '../lib/genome';
+import { loadGenome, saveGenome } from '../lib/genome';
 import { deriveKey } from '../lib/crypto';
+import { cacheProduct, getCachedProduct } from '../lib/cache';
+import { toAttributeVector } from '../lib/scoring';
+import { calculateFeedbackUpdate } from '../lib/feedback';
 
 export default defineBackground(() => {
   console.log('[smartdeal-hunter] background ready', { id: browser.runtime.id });
@@ -19,6 +23,19 @@ export default defineBackground(() => {
       ensureOffscreen().then(() => {
         browser.runtime.sendMessage({ target: 'offscreen', ...message }).then(sendResponse);
       });
+      return true;
+    }
+
+    if (message.type === 'UPDATE_GENOME') {
+      const msg = message as UpdateGenomeRequest;
+      handleUpdateGenome(msg.payload.asin, msg.payload.feedbackType)
+        .then((success) => {
+          sendResponse({ success });
+        })
+        .catch((err) => {
+          console.error('[smartdeal-hunter] Feedback update failed', err);
+          sendResponse({ success: false, error: err.message });
+        });
       return true;
     }
 
@@ -36,6 +53,29 @@ export default defineBackground(() => {
       return true; // Keep channel open
     }
   });
+
+  async function handleUpdateGenome(
+    asin: string,
+    feedbackType: 'not_interested' | 'saved' | 'purchased',
+  ): Promise<boolean> {
+    const salt = new Uint8Array(16);
+    const key = await deriveKey('bootstrap-session-password', salt);
+
+    const product = await getCachedProduct(asin, key);
+    if (!product) {
+      throw new Error('Product not found in cache');
+    }
+
+    const genome = await loadGenome(key);
+    if (!genome.isOnboarded) {
+      throw new Error('User not onboarded');
+    }
+
+    const productVector = toAttributeVector(product);
+    const updatedGenome = calculateFeedbackUpdate(genome, productVector, feedbackType);
+    await saveGenome(updatedGenome, key);
+    return true;
+  }
 
   async function handleScrapeRequest(tabId?: number): Promise<boolean> {
     let targetTabId = tabId;
@@ -71,6 +111,9 @@ export default defineBackground(() => {
     if (!genome.isOnboarded) {
       throw new Error('User not onboarded');
     }
+
+    // 2.5 Cache product
+    await cacheProduct(productData, key);
 
     // 3. Compute Scores
     await ensureOffscreen();

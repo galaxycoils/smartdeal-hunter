@@ -42,12 +42,21 @@ export interface ComputeScoresError {
   error: string;
 }
 
+export interface UpdateGenomeRequest {
+  type: 'UPDATE_GENOME';
+  payload: {
+    asin: string;
+    feedbackType: 'not_interested' | 'saved' | 'purchased';
+  };
+}
+
 export type ContentMessage =
   | ExecuteScraperRequest
   | ProductDataResponse
   | ComputeScoresRequest
   | ScoreResultResponse
   | ComputeScoresError
-  | RenderPanelMessage;
+  | RenderPanelMessage
+  | UpdateGenomeRequest;
 export type OffscreenMessage = ComputeScoresRequest | ScoreResultResponse | ComputeScoresError;
 export type PopupMessage = ScrapeRequest;

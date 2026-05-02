@@ -12,23 +12,21 @@ Before doing ANYTHING in this repo, read these files in order:
 
 ## Current state (2026-05-02)
 
-Batches 1 through 4 (P1.2 - P1.10) are **DONE and COMMITTED**.
+Batches 1 through 5 (P1.2 - P1.12) are **DONE and COMMITTED**.
 
-- **P1.6**: Onboarding UI.
-- **P1.7/1.8**: True Value & Personal Fit scoring engine.
-- **P1.9**: Popup Dashboard UI.
-- **P1.10**: Scout Result Panel.
-- All tests pass (66/66). Lint clean.
+- **P1.11**: Feedback Loop Engine.
+- **P1.12**: Product Cache & Indexing.
+- All tests pass (78/78). Lint clean.
 - Coverage threshold: **70/70/70/70** achieved and enforced in `.coverage-thresholds.json`.
 
-## Next Task: Phase 1 Batch 5
+## Next Task: Phase 1 Batch 6
 
-We are now ready for **Batch 5**:
+We are now ready for **Batch 6**:
 
-- **Task P1.11**: Feedback Loop Engine (Depends on P1.8, P1.10).
-- **Task P1.12**: Product Cache & Indexing (Depends on P1.2, P1.4).
+- **Task P1.13**: Privacy & Compliance Shell (Depends on P1.2).
+- **Task P1.14**: E2E Integration Tests (Depends on P1.10, P1.13).
 
-**First step**: Create `conductor/plan-batch5.md` and run the plan-review-gate.
+**First step**: Create `conductor/plan-batch6.md` and run the plan-review-gate.
 
 ## Hard rules (from CLAUDE.md)
 
