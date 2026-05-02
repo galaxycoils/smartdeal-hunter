@@ -2,27 +2,39 @@
  * Offscreen document script for SmartDeal Hunter.
  * Handles computation-heavy tasks like ML inference.
  */
+import { calculateTrueValue, calculatePersonalFit } from '../../lib/scoring';
+import type { OffscreenMessage } from '../../lib/messaging/types';
 
 console.log('[smartdeal-hunter] offscreen ready');
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message: OffscreenMessage, _sender, sendResponse) => {
   // Only handle messages targeted at the offscreen document
+  // @ts-expect-error - target is not on all message types but we check it
   if (message.target !== 'offscreen') return;
 
-  if (message.type === 'START_ANALYSIS') {
-    console.log('[smartdeal-hunter] performing analysis in offscreen...', message.payload);
+  if (message.type === 'COMPUTE_SCORES') {
+    const { productData, genome } = message.payload;
 
-    // Scaffold: simulate work
-    setTimeout(() => {
+    try {
+      const trueValue = calculateTrueValue(productData);
+      const personalFit = calculatePersonalFit(genome, productData);
+
       sendResponse({
-        success: true,
+        type: 'SCORE_RESULT',
         payload: {
-          asin: message.payload.asin,
-          score: Math.random(), // Placeholder for P1.7/P1.8
-          status: 'COMPLETED',
+          trueValue,
+          personalFit,
+          breakdown: {
+            rating: calculateTrueValue(productData), // Example breakdown
+          },
         },
       });
-    }, 500);
+    } catch (err) {
+      sendResponse({
+        type: 'SCORE_ERROR',
+        error: err instanceof Error ? err.message : 'Unknown scoring error',
+      });
+    }
 
     return true; // Async response
   }

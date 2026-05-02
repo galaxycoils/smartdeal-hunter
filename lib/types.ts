@@ -60,4 +60,7 @@ export interface ProductData {
   url: string;
   scrapedAt: number;
   source: 'url' | 'jsonld' | 'dom';
+  listPrice: number | null;
+  unitPrice: number | null;
+  quantity: number | null;
 }

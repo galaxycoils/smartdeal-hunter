@@ -188,6 +188,9 @@ describe('Amazon Scraper', () => {
         url: 'https://amazon.com/dp/B000000001',
         scrapedAt: 1000,
         source: 'url',
+        listPrice: null,
+        unitPrice: null,
+        quantity: null,
       });
     });
 

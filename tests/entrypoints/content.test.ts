@@ -55,6 +55,9 @@ describe('Content Script', () => {
       imageUrl: null,
       jsonLd: null,
       scrapedAt: 1,
+      listPrice: null,
+      unitPrice: null,
+      quantity: null,
     };
 
     vi.mocked(scrapeProduct).mockReturnValue(mockProductData);

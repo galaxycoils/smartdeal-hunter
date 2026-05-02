@@ -100,6 +100,9 @@ export function scrapeProduct(url: string, doc: Document, now = Date.now): Produ
     url,
     scrapedAt: now(),
     source: 'url', // fallback
+    listPrice: null,
+    unitPrice: null,
+    quantity: null,
   };
 
   if (ldData && (ldData.title || ldData.price)) {

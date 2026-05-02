@@ -4,8 +4,8 @@ export default defineBackground(() => {
   console.log('[smartdeal-hunter] background ready', { id: browser.runtime.id });
 
   // Handle messages from content scripts or popup
-  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'START_ANALYSIS') {
+  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === 'START_ANALYSIS' || message.type === 'COMPUTE_SCORES') {
       // Trigger offscreen inference
       ensureOffscreen().then(() => {
         // Forward to offscreen
