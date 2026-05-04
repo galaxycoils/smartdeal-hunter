@@ -6,9 +6,10 @@
 import { encryptWithKey, decryptWithKey } from './crypto';
 
 const DB_NAME = 'SmartDealHunterDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_GENOME = 'genome';
-const STORE_PRODUCT_CACHE = 'product_cache';
+export const STORE_PRODUCT_CACHE = 'product_cache';
+export const STORE_ANALYSIS_CACHE = 'analysis_cache';
 
 export interface StorageResult<T> {
   success: boolean;
@@ -30,6 +31,9 @@ async function getDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_PRODUCT_CACHE)) {
         db.createObjectStore(STORE_PRODUCT_CACHE);
+      }
+      if (!db.objectStoreNames.contains(STORE_ANALYSIS_CACHE)) {
+        db.createObjectStore(STORE_ANALYSIS_CACHE);
       }
     };
 

@@ -57,7 +57,7 @@ describe('Options App', () => {
 
     // Switch to DeepCheck
     fireEvent.click(screen.getByText('DeepCheck'));
-    expect(screen.getByText('DeepCheck API settings coming soon...')).toBeDefined();
+    expect(screen.getByText('Amazon Creators API')).toBeDefined();
   });
 
   it('handles data wipe', async () => {

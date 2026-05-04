@@ -1,7 +1,13 @@
 // Vitest setup. WxtVitest plugin auto-mocks the WebExtension APIs (browser/chrome).
 // Add project-wide test wiring here as the suite grows.
 
-import { vi } from 'vitest';
+import { vi, afterEach } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+
+afterEach(() => {
+  cleanup();
+});
 
 const mockBrowser = {
   runtime: {

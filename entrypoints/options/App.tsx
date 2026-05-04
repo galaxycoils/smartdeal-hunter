@@ -3,7 +3,10 @@ import { browser } from 'wxt/browser';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../../components/ui/Card';
 import { Tabs } from '../../components/ui/Tabs';
+import { GenomeTab } from '../../components/ui/GenomeTab';
+import { DeepCheckTab } from '../../components/ui/DeepCheckTab';
 import { loadGenome } from '../../lib/genome';
+import { Genome } from '../../lib/types';
 import { wipeAllData } from '../../lib/storage';
 import { deriveKey } from '../../lib/crypto';
 
@@ -124,23 +127,25 @@ export function App() {
       id: 'genome',
       label: 'Genome',
       content: (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-500">Genome editor coming soon...</p>
-          </CardContent>
-        </Card>
+        <GenomeTab
+          genome={
+            {
+              version: 1,
+              lastUpdated: 0,
+              sessionId: '',
+              encryptionSalt: '',
+              createdAt: 0,
+              dimensions: {},
+            } as unknown as Genome
+          }
+          onGenomeChange={() => {}}
+        />
       ),
     },
     {
       id: 'deepcheck',
       label: 'DeepCheck',
-      content: (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-500">DeepCheck API settings coming soon...</p>
-          </CardContent>
-        </Card>
-      ),
+      content: <DeepCheckTab />,
     },
     {
       id: 'about',
