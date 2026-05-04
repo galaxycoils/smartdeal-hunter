@@ -131,4 +131,112 @@ describe('Storage Layer', () => {
     expect(await getItem('genome', 'g1')).toBeUndefined();
     expect(await getItem('product_cache', 'p1')).toBeUndefined();
   });
+
+  it('returns undefined when getting encrypted item that is missing', async () => {
+    const result = await getEncryptedItem('genome', 'absent', testKey);
+    expect(result).toBeUndefined();
+  });
+
+  it('runs onupgradeneeded when stores do not yet exist', async () => {
+    const createObjectStore = vi.fn();
+    const upgradeOpen = vi.fn().mockImplementation(() => {
+      const req = {
+        onsuccess: null as null | (() => void),
+        onupgradeneeded: null as null | (() => void),
+        onerror: null as null | (() => void),
+        result: {
+          objectStoreNames: { contains: () => false },
+          createObjectStore,
+          transaction: () => ({
+            objectStore: () => ({
+              put: () => {
+                const r = {
+                  onsuccess: null as null | (() => void),
+                  onerror: null as null | (() => void),
+                  result: undefined,
+                };
+                setTimeout(() => r.onsuccess?.(), 0);
+                return r;
+              },
+            }),
+          }),
+        },
+      };
+      setTimeout(() => {
+        req.onupgradeneeded?.();
+        req.onsuccess?.();
+      }, 0);
+      return req;
+    });
+
+    vi.stubGlobal('indexedDB', { open: upgradeOpen });
+    try {
+      await setItem('genome', 'k', 'v');
+      expect(createObjectStore).toHaveBeenCalledWith('genome');
+      expect(createObjectStore).toHaveBeenCalledWith('product_cache');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('skips createObjectStore when stores already exist on upgrade', async () => {
+    const createObjectStore = vi.fn();
+    const upgradeOpen = vi.fn().mockImplementation(() => {
+      const req = {
+        onsuccess: null as null | (() => void),
+        onupgradeneeded: null as null | (() => void),
+        onerror: null as null | (() => void),
+        result: {
+          objectStoreNames: { contains: () => true },
+          createObjectStore,
+          transaction: () => ({
+            objectStore: () => ({
+              put: () => {
+                const r = {
+                  onsuccess: null as null | (() => void),
+                  onerror: null as null | (() => void),
+                  result: undefined,
+                };
+                setTimeout(() => r.onsuccess?.(), 0);
+                return r;
+              },
+            }),
+          }),
+        },
+      };
+      setTimeout(() => {
+        req.onupgradeneeded?.();
+        req.onsuccess?.();
+      }, 0);
+      return req;
+    });
+
+    vi.stubGlobal('indexedDB', { open: upgradeOpen });
+    try {
+      await setItem('genome', 'k', 'v');
+      expect(createObjectStore).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('rejects when indexedDB open errors', async () => {
+    const errorOpen = vi.fn().mockImplementation(() => {
+      const req = {
+        onsuccess: null as null | (() => void),
+        onerror: null as null | (() => void),
+        error: new Error('boom'),
+        result: null,
+      };
+      setTimeout(() => req.onerror?.(), 0);
+      return req;
+    });
+
+    vi.stubGlobal('indexedDB', { open: errorOpen });
+    try {
+      await expect(setItem('genome', 'k', 'v')).rejects.toThrow('boom');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

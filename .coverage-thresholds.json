@@ -1,9 +1,9 @@
 {
   "global": {
-    "statements": 70,
-    "branches": 70,
-    "functions": 70,
-    "lines": 70
+    "statements": 90,
+    "branches": 90,
+    "functions": 90,
+    "lines": 90
   },
-  "_ratchet_plan": "Bootstrap 0% -> P1.5 50% -> P1.10 70% -> P1.15 90%"
+  "_ratchet_plan": "Bootstrap 0% -> P1.5 50% -> P1.10 70% -> P1.15 90% (current)"
 }

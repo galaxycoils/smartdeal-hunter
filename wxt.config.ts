@@ -5,9 +5,12 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'SmartDeal Hunter',
+    short_name: 'SmartDeal',
     description:
       'Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit scoring. No tracking.',
     version: '0.0.1',
+    author: { email: 'tahamtandariush@gmail.com' },
+    homepage_url: 'https://github.com/tahamtandariush/smartdeal-hunter',
     permissions: ['activeTab', 'scripting', 'storage', 'alarms', 'offscreen'],
     host_permissions: ['https://*.amazon.com/*'],
     content_security_policy: {

@@ -58,4 +58,10 @@ describe('Offscreen Manager', () => {
 
     expect(mockBrowser.offscreen.closeDocument).toHaveBeenCalled();
   });
+
+  it('does not call closeDocument when no offscreen context exists', async () => {
+    mockBrowser.runtime.getContexts.mockResolvedValue([]);
+    await closeOffscreen();
+    expect(mockBrowser.offscreen.closeDocument).not.toHaveBeenCalled();
+  });
 });

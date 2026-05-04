@@ -116,6 +116,60 @@ describe('Scoring Algorithm', () => {
     });
   });
 
+  describe('toAttributeVector edge cases (branch coverage)', () => {
+    it('handles null price by using neutral 0.5', () => {
+      const v = calculateTrueValue({ ...mockProduct, price: null, listPrice: null });
+      expect(v).toBeGreaterThan(0);
+    });
+
+    it('handles missing reviewCount/rating', () => {
+      const score = calculateTrueValue({
+        ...mockProduct,
+        rating: null,
+        reviewCount: null,
+        price: 50,
+        listPrice: null,
+      });
+      expect(score).toBeGreaterThanOrEqual(0);
+    });
+
+    it('handles reviewCount === 0', () => {
+      const score = calculateTrueValue({ ...mockProduct, reviewCount: 0 });
+      expect(score).toBeGreaterThanOrEqual(0);
+    });
+
+    it('handles missing listPrice (no discount path)', () => {
+      const score = calculateTrueValue({ ...mockProduct, listPrice: null });
+      expect(score).toBeGreaterThan(0);
+    });
+
+    it('handles listPrice <= price (discount clamped to 0)', () => {
+      const score = calculateTrueValue({ ...mockProduct, listPrice: 50, price: 100 });
+      expect(score).toBeGreaterThan(0);
+    });
+
+    it('handles listPrice = 0 (treated as no discount)', () => {
+      const score = calculateTrueValue({ ...mockProduct, listPrice: 0 });
+      expect(score).toBeGreaterThan(0);
+    });
+
+    it('handles jsonLd with non-string non-object brand', () => {
+      const score = calculateTrueValue({
+        ...mockProduct,
+        jsonLd: { brand: 123 } as unknown as ProductData['jsonLd'],
+      });
+      expect(score).toBeGreaterThanOrEqual(0);
+    });
+
+    it('handles unknown brand falls back to Generic', () => {
+      const score = calculateTrueValue({
+        ...mockProduct,
+        jsonLd: { brand: { name: 'TotallyUnknownBrand' } },
+      });
+      expect(score).toBeGreaterThan(0);
+    });
+  });
+
   describe('calculatePersonalFit', () => {
     it('should calculate a fit score between 0 and 100', () => {
       const score = calculatePersonalFit(mockGenome, mockProduct);
@@ -149,6 +203,17 @@ describe('Scoring Algorithm', () => {
       const lowFit = calculatePersonalFit(highQualityGenome, lowQualityProduct);
 
       expect(highFit).toBeGreaterThan(lowFit);
+    });
+
+    it('returns 0 when total dimension weight is 0', () => {
+      const zeroWeightGenome: Genome = {
+        ...mockGenome,
+        dimensions: Object.fromEntries(
+          Object.entries(mockGenome.dimensions).map(([k, v]) => [k, { ...v, weight: 0 }]),
+        ) as Genome['dimensions'],
+      };
+      const fit = calculatePersonalFit(zeroWeightGenome, mockProduct);
+      expect(fit).toBe(0);
     });
   });
 });

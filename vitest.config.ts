@@ -5,9 +5,12 @@ import { defineConfig } from 'vitest/config';
 import { WxtVitest } from 'wxt/testing';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const thresholds = JSON.parse(
+const thresholdsFile = JSON.parse(
   readFileSync(resolve(__dirname, '.coverage-thresholds.json'), 'utf8'),
-) as { lines: number; branches: number; functions: number; statements: number };
+) as {
+  global: { lines: number; branches: number; functions: number; statements: number };
+};
+const thresholds = thresholdsFile.global;
 
 export default defineConfig({
   plugins: [WxtVitest()],

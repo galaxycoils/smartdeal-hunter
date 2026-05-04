@@ -175,6 +175,56 @@ describe('Genome Engine', () => {
     }
   });
 
+  it('clipAndRenormalize distributes evenly when all weights are 0', () => {
+    const g = defaultGenome();
+    for (const dim of GENOME_DIMENSIONS) {
+      g.dimensions[dim].weight = 0;
+    }
+    const clipped = clipAndRenormalize(g);
+    const expected = 1 / GENOME_DIMENSIONS.length;
+    for (const dim of GENOME_DIMENSIONS) {
+      expect(clipped.dimensions[dim].weight).toBeCloseTo(expected, 10);
+    }
+  });
+
+  it('clipAndRenormalize clamps negative weights to 0 before renormalize', () => {
+    const g = defaultGenome();
+    g.dimensions.price_sensitivity.weight = -5;
+    const clipped = clipAndRenormalize(g);
+    expect(clipped.dimensions.price_sensitivity.weight).toBe(0);
+  });
+
+  it('validateGenome rejects non-objects, non-numbers, and missing fields', () => {
+    expect(validateGenome(null)).toBe(false);
+    expect(validateGenome(undefined)).toBe(false);
+    expect(validateGenome('foo' as unknown)).toBe(false);
+
+    const g = defaultGenome();
+    const noBandit = JSON.parse(JSON.stringify(g));
+    delete noBandit.bandit;
+    expect(validateGenome(noBandit)).toBe(false);
+
+    const badCreatedAt = JSON.parse(JSON.stringify(g));
+    badCreatedAt.createdAt = 'nope';
+    expect(validateGenome(badCreatedAt)).toBe(false);
+
+    const badUpdatedAt = JSON.parse(JSON.stringify(g));
+    badUpdatedAt.updatedAt = 'nope';
+    expect(validateGenome(badUpdatedAt)).toBe(false);
+
+    const badRewards = JSON.parse(JSON.stringify(g));
+    delete badRewards.bandit.rewards.price_sensitivity;
+    expect(validateGenome(badRewards)).toBe(false);
+
+    const badWeightType = JSON.parse(JSON.stringify(g));
+    badWeightType.dimensions.price_sensitivity.weight = 'high';
+    expect(validateGenome(badWeightType)).toBe(false);
+
+    const negWeight = JSON.parse(JSON.stringify(g));
+    negWeight.dimensions.price_sensitivity.weight = -0.1;
+    expect(validateGenome(negWeight)).toBe(false);
+  });
+
   it('roundtrips securely through storage', async () => {
     const g = defaultGenome();
     g.isOnboarded = true;
