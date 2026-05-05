@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import {
   setItem,
   getItem,
@@ -6,237 +6,169 @@ import {
   setEncryptedItem,
   getEncryptedItem,
   wipeAllData,
+  getAllItems,
+  STORE_PRODUCT_CACHE,
+  STORE_ANALYSIS_CACHE,
+  STORE_HISTORY_EVENTS,
+  STORE_OAUTH,
+  DBVersionMismatchError,
 } from '../../lib/storage';
 import { deriveKey } from '../../lib/crypto';
+import {
+  installIndexedDbMock,
+  resetIndexedDbMock,
+  seedDatabase,
+  getDatabaseStores,
+  setIndexedDbOpenError,
+} from '../helpers/indexeddb';
 
-// Minimal mock for IndexedDB
-const mockDB = {
-  stores: new Map<string, Map<string, unknown>>(),
-};
-
-const createMockRequest = (result: unknown) => ({
-  onsuccess: null as (() => void) | null,
-  onerror: null as (() => void) | null,
-  result,
-});
-
-vi.stubGlobal('indexedDB', {
-  open: vi.fn().mockImplementation((_name, _version) => {
-    const request = createMockRequest({
-      objectStoreNames: Object.assign(['genome', 'product_cache'], {
-        contains: (_n: string) => true,
-      }),
-      transaction: (_storeNames: string | string[], _mode: string) => ({
-        objectStore: (name: string) => ({
-          put: vi.fn().mockImplementation((val, key) => {
-            if (!mockDB.stores.has(name)) mockDB.stores.set(name, new Map());
-            mockDB.stores.get(name)!.set(key, val);
-            const req = createMockRequest(key);
-            setTimeout(() => req.onsuccess?.(), 0);
-            return req;
-          }),
-          get: vi.fn().mockImplementation((key) => {
-            const val = mockDB.stores.get(name)?.get(key);
-            const req = createMockRequest(val);
-            setTimeout(() => req.onsuccess?.(), 0);
-            return req;
-          }),
-          delete: vi.fn().mockImplementation((key) => {
-            mockDB.stores.get(name)?.delete(key);
-            const req = createMockRequest(undefined);
-            setTimeout(() => req.onsuccess?.(), 0);
-            return req;
-          }),
-          clear: vi.fn().mockImplementation(() => {
-            mockDB.stores.get(name)?.clear();
-            const req = createMockRequest(undefined);
-            setTimeout(() => req.onsuccess?.(), 0);
-            return req;
-          }),
-        }),
-      }),
-    });
-    setTimeout(() => request.onsuccess?.(), 0);
-    return request;
-  }),
-});
+const DB_NAME = 'SmartDealHunterDB';
+const STORE_GENOME = 'genome';
 
 describe('Storage Layer', () => {
   let testKey: CryptoKey;
 
   beforeAll(async () => {
+    installIndexedDbMock();
     const salt = new Uint8Array(16);
     testKey = await deriveKey('test-pw', salt);
   });
 
   beforeEach(() => {
-    mockDB.stores.clear();
-    mockDB.stores.set('genome', new Map());
-    mockDB.stores.set('product_cache', new Map());
+    resetIndexedDbMock();
   });
 
-  it('should store and retrieve plain items', async () => {
-    const key = 'test-key';
-    const value = { foo: 'bar' };
-    await setItem('product_cache', key, value);
-    const retrieved = await getItem('product_cache', key);
-    expect(retrieved).toEqual(value);
+  it('stores and retrieves plain items', async () => {
+    await setItem(STORE_PRODUCT_CACHE, 'test-key', { foo: 'bar' });
+
+    await expect(getItem(STORE_PRODUCT_CACHE, 'test-key')).resolves.toEqual({ foo: 'bar' });
   });
 
-  it('should delete items', async () => {
-    const key = 'test-key';
-    await setItem('product_cache', key, 'val');
-    await deleteItem('product_cache', key);
-    const retrieved = await getItem('product_cache', key);
-    expect(retrieved).toBeUndefined();
+  it('deletes items', async () => {
+    await setItem(STORE_PRODUCT_CACHE, 'test-key', 'value');
+    await deleteItem(STORE_PRODUCT_CACHE, 'test-key');
+
+    await expect(getItem(STORE_PRODUCT_CACHE, 'test-key')).resolves.toBeUndefined();
   });
 
-  it('should store and retrieve encrypted items in STORE_GENOME', async () => {
-    const key = 'genome-key';
+  it('stores and retrieves encrypted items in the genome store', async () => {
     const value = { fit: 0.85, preferences: [1, 0, 1] };
 
-    await setEncryptedItem('genome', key, value, testKey);
-    const retrieved = await getEncryptedItem('genome', key, testKey);
-    expect(retrieved).toEqual(value);
+    await setEncryptedItem(STORE_GENOME, 'genome-key', value, testKey);
 
-    // Assert per-store routing
-    expect(mockDB.stores.get('genome')?.has(key)).toBe(true);
-    expect(mockDB.stores.get('product_cache')?.has(key)).toBe(false);
+    await expect(getEncryptedItem(STORE_GENOME, 'genome-key', testKey)).resolves.toEqual(value);
+    expect(getDatabaseStores(DB_NAME)?.get(STORE_PRODUCT_CACHE)?.has('genome-key')).toBe(false);
   });
 
-  it('should store and retrieve encrypted items in STORE_PRODUCT_CACHE', async () => {
-    const key = 'product-key';
+  it('stores and retrieves encrypted items in the product cache store', async () => {
     const value = { secret: 'data' };
 
-    await setEncryptedItem('product_cache', key, value, testKey);
-    const retrieved = await getEncryptedItem('product_cache', key, testKey);
-    expect(retrieved).toEqual(value);
+    await setEncryptedItem(STORE_PRODUCT_CACHE, 'product-key', value, testKey);
 
-    // Assert per-store routing
-    expect(mockDB.stores.get('product_cache')?.has(key)).toBe(true);
-    expect(mockDB.stores.get('genome')?.has(key)).toBe(false);
+    await expect(getEncryptedItem(STORE_PRODUCT_CACHE, 'product-key', testKey)).resolves.toEqual(
+      value,
+    );
+    expect(getDatabaseStores(DB_NAME)?.get(STORE_GENOME)?.has('product-key')).toBe(false);
   });
 
-  it('should return undefined for missing items', async () => {
-    const retrieved = await getItem('product_cache', 'non-existent');
-    expect(retrieved).toBeUndefined();
+  it('returns undefined for missing encrypted items', async () => {
+    await expect(getEncryptedItem(STORE_GENOME, 'absent', testKey)).resolves.toBeUndefined();
   });
 
-  it('should wipe all data', async () => {
-    await setItem('genome', 'g1', 'v1');
-    await setItem('product_cache', 'p1', 'v2');
+  it('returns all items from a store', async () => {
+    await setItem(STORE_HISTORY_EVENTS, '1:A', { ts: 1, asin: 'A', kind: 'analyze' });
+    await setItem(STORE_HISTORY_EVENTS, '2:B', { ts: 2, asin: 'B', kind: 'view' });
+
+    await expect(getAllItems(STORE_HISTORY_EVENTS)).resolves.toEqual([
+      { ts: 1, asin: 'A', kind: 'analyze' },
+      { ts: 2, asin: 'B', kind: 'view' },
+    ]);
+  });
+
+  it('wipes all stores, including history and oauth stores', async () => {
+    await setItem(STORE_GENOME, 'g1', 'v1');
+    await setItem(STORE_PRODUCT_CACHE, 'p1', 'v2');
+    await setItem(STORE_ANALYSIS_CACHE, 'a1', 'v3');
+    await setItem(STORE_HISTORY_EVENTS, 'h1', { ts: 1, asin: 'A', kind: 'analyze' });
+    await setItem(STORE_OAUTH, 'tokens', { accessToken: 'x' });
 
     await wipeAllData();
 
-    expect(await getItem('genome', 'g1')).toBeUndefined();
-    expect(await getItem('product_cache', 'p1')).toBeUndefined();
+    await expect(getItem(STORE_GENOME, 'g1')).resolves.toBeUndefined();
+    await expect(getItem(STORE_PRODUCT_CACHE, 'p1')).resolves.toBeUndefined();
+    await expect(getItem(STORE_ANALYSIS_CACHE, 'a1')).resolves.toBeUndefined();
+    await expect(getItem(STORE_HISTORY_EVENTS, 'h1')).resolves.toBeUndefined();
+    await expect(getItem(STORE_OAUTH, 'tokens')).resolves.toBeUndefined();
   });
 
-  it('returns undefined when getting encrypted item that is missing', async () => {
-    const result = await getEncryptedItem('genome', 'absent', testKey);
-    expect(result).toBeUndefined();
+  it('creates all required stores on initial upgrade', async () => {
+    await setItem(STORE_GENOME, 'k', 'v');
+
+    const stores = getDatabaseStores(DB_NAME);
+    expect(stores?.has(STORE_GENOME)).toBe(true);
+    expect(stores?.has(STORE_PRODUCT_CACHE)).toBe(true);
+    expect(stores?.has(STORE_ANALYSIS_CACHE)).toBe(true);
+    expect(stores?.has(STORE_HISTORY_EVENTS)).toBe(true);
+    expect(stores?.has(STORE_OAUTH)).toBe(true);
   });
 
-  it('runs onupgradeneeded when stores do not yet exist', async () => {
-    const createObjectStore = vi.fn();
-    const upgradeOpen = vi.fn().mockImplementation(() => {
-      const req = {
-        onsuccess: null as null | (() => void),
-        onupgradeneeded: null as null | (() => void),
-        onerror: null as null | (() => void),
-        result: {
-          objectStoreNames: { contains: () => false },
-          createObjectStore,
-          transaction: () => ({
-            objectStore: () => ({
-              put: () => {
-                const r = {
-                  onsuccess: null as null | (() => void),
-                  onerror: null as null | (() => void),
-                  result: undefined,
-                };
-                setTimeout(() => r.onsuccess?.(), 0);
-                return r;
-              },
-            }),
-          }),
-        },
-      };
-      setTimeout(() => {
-        req.onupgradeneeded?.();
-        req.onsuccess?.();
-      }, 0);
-      return req;
+  it('upgrades a v2 database and preserves existing data while adding new stores', async () => {
+    seedDatabase(DB_NAME, 2, {
+      [STORE_GENOME]: { g1: 'persisted-genome' },
+      [STORE_PRODUCT_CACHE]: { p1: 'persisted-product' },
+      [STORE_ANALYSIS_CACHE]: { a1: 'persisted-analysis' },
     });
 
-    vi.stubGlobal('indexedDB', { open: upgradeOpen });
-    try {
-      await setItem('genome', 'k', 'v');
-      expect(createObjectStore).toHaveBeenCalledWith('genome');
-      expect(createObjectStore).toHaveBeenCalledWith('product_cache');
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    await expect(getItem(STORE_GENOME, 'g1')).resolves.toBe('persisted-genome');
+
+    const stores = getDatabaseStores(DB_NAME);
+    expect(stores?.has(STORE_HISTORY_EVENTS)).toBe(true);
+    expect(stores?.has(STORE_OAUTH)).toBe(true);
+    expect(stores?.get(STORE_HISTORY_EVENTS)?.size).toBe(0);
+    expect(stores?.get(STORE_OAUTH)?.size).toBe(0);
   });
 
-  it('skips createObjectStore when stores already exist on upgrade', async () => {
-    const createObjectStore = vi.fn();
-    const upgradeOpen = vi.fn().mockImplementation(() => {
-      const req = {
-        onsuccess: null as null | (() => void),
-        onupgradeneeded: null as null | (() => void),
-        onerror: null as null | (() => void),
-        result: {
-          objectStoreNames: { contains: () => true },
-          createObjectStore,
-          transaction: () => ({
-            objectStore: () => ({
-              put: () => {
-                const r = {
-                  onsuccess: null as null | (() => void),
-                  onerror: null as null | (() => void),
-                  result: undefined,
-                };
-                setTimeout(() => r.onsuccess?.(), 0);
-                return r;
-              },
-            }),
-          }),
-        },
-      };
-      setTimeout(() => {
-        req.onupgradeneeded?.();
-        req.onsuccess?.();
-      }, 0);
-      return req;
-    });
+  it('throws DBVersionMismatchError when opening a future-version database', async () => {
+    seedDatabase(
+      DB_NAME,
+      5,
+      {
+        [STORE_GENOME]: { g1: 'future-genome' },
+        [STORE_PRODUCT_CACHE]: {},
+        [STORE_ANALYSIS_CACHE]: {},
+        [STORE_HISTORY_EVENTS]: {},
+        [STORE_OAUTH]: {},
+      },
+      { failOnLowerVersion: false },
+    );
 
-    vi.stubGlobal('indexedDB', { open: upgradeOpen });
-    try {
-      await setItem('genome', 'k', 'v');
-      expect(createObjectStore).not.toHaveBeenCalled();
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    await expect(getItem(STORE_GENOME, 'g1')).rejects.toBeInstanceOf(DBVersionMismatchError);
+  });
+
+  it('preserves future-version data after version mismatch rejection', async () => {
+    seedDatabase(
+      DB_NAME,
+      5,
+      {
+        [STORE_GENOME]: { g1: 'future-genome' },
+        [STORE_PRODUCT_CACHE]: {},
+        [STORE_ANALYSIS_CACHE]: {},
+        [STORE_HISTORY_EVENTS]: {},
+        [STORE_OAUTH]: { tokens: { accessToken: 'future-token' } },
+      },
+      { failOnLowerVersion: false },
+    );
+
+    await expect(getItem(STORE_GENOME, 'g1')).rejects.toBeInstanceOf(DBVersionMismatchError);
+
+    const stores = getDatabaseStores(DB_NAME);
+    expect(stores?.get(STORE_GENOME)?.get('g1')).toBe('future-genome');
+    expect(stores?.get(STORE_OAUTH)?.get('tokens')).toEqual({ accessToken: 'future-token' });
   });
 
   it('rejects when indexedDB open errors', async () => {
-    const errorOpen = vi.fn().mockImplementation(() => {
-      const req = {
-        onsuccess: null as null | (() => void),
-        onerror: null as null | (() => void),
-        error: new Error('boom'),
-        result: null,
-      };
-      setTimeout(() => req.onerror?.(), 0);
-      return req;
-    });
+    setIndexedDbOpenError(new Error('boom'));
 
-    vi.stubGlobal('indexedDB', { open: errorOpen });
-    try {
-      await expect(setItem('genome', 'k', 'v')).rejects.toThrow('boom');
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    await expect(setItem(STORE_GENOME, 'k', 'v')).rejects.toThrow('boom');
   });
 });

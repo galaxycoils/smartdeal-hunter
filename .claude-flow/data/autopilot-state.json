@@ -1,0 +1,11 @@
+{
+  "sessionId": "89054cb7-48b4-44c0-b0d8-eb82faf1a013",
+  "enabled": true,
+  "startTime": 1777995233491,
+  "iterations": 0,
+  "maxIterations": 50,
+  "timeoutMinutes": 240,
+  "taskSources": ["team-tasks", "swarm-tasks", "file-checklist"],
+  "lastCheck": null,
+  "history": []
+}

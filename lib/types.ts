@@ -26,11 +26,18 @@ export type GenomeVersion = (typeof GENOME_VERSIONS_SUPPORTED)[number];
 
 export interface Genome {
   version: GenomeVersion;
+  revision?: number;
   isOnboarded: boolean;
   dimensions: Record<GenomeDimension, GenomeDimensionState>;
   bandit: BanditState;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface HistoryEvent {
+  ts: number;
+  asin: string;
+  kind: 'view' | 'analyze' | 'bundle-add';
 }
 
 export const PRODUCT_ATTRIBUTES = [

@@ -1,8 +1,17 @@
 import { GENOME_DIMENSIONS, type Genome, GENOME_VERSION_CURRENT } from './types';
 import { getEncryptedItem, setEncryptedItem, deleteItem } from './storage';
+import { GenomeStaleError } from './errors/genome-errors';
 
 export const GENOME_DB_KEY = 'genome:v1';
 export const GENOME_STORE = 'genome';
+export { GenomeStaleError } from './errors/genome-errors';
+
+function withRevision(g: Genome): Genome {
+  if (g.revision === undefined) {
+    return { ...g, revision: 1 };
+  }
+  return g;
+}
 
 export function defaultGenome(now = Date.now): Genome {
   const dimensions = {} as Genome['dimensions'];
@@ -18,6 +27,7 @@ export function defaultGenome(now = Date.now): Genome {
   const ts = now();
   return {
     version: GENOME_VERSION_CURRENT,
+    revision: 1,
     isOnboarded: false,
     dimensions,
     bandit,
@@ -36,6 +46,12 @@ export function validateGenome(g: unknown): g is Genome {
   if (!gen.bandit || !gen.bandit.pulls || !gen.bandit.rewards) return false;
   if (typeof gen.createdAt !== 'number') return false;
   if (typeof gen.updatedAt !== 'number') return false;
+  if (
+    gen.revision !== undefined &&
+    (typeof gen.revision !== 'number' || !Number.isInteger(gen.revision) || gen.revision < 1)
+  ) {
+    return false;
+  }
 
   let weightSum = 0;
   for (const dim of GENOME_DIMENSIONS) {
@@ -95,14 +111,57 @@ export async function loadGenome(key: CryptoKey, now = Date.now): Promise<Genome
     throw new Error('Genome validation failed during load');
   }
 
-  return data;
+  return withRevision(data);
 }
 
-export async function saveGenome(g: Genome, key: CryptoKey, now = Date.now): Promise<void> {
-  g.updatedAt = now();
-  await setEncryptedItem(GENOME_STORE, GENOME_DB_KEY, g, key);
+export async function saveGenome(
+  g: Genome,
+  key: CryptoKey,
+  opts?: { now?: () => number; expectedRevision?: number },
+): Promise<void> {
+  const now = opts?.now ?? Date.now;
+  const existing = await getEncryptedItem<unknown>(GENOME_STORE, GENOME_DB_KEY, key);
+
+  if (existing !== undefined && !validateGenome(existing)) {
+    throw new Error('Genome validation failed during save');
+  }
+
+  const current = existing === undefined ? undefined : withRevision(existing);
+
+  if (opts?.expectedRevision !== undefined) {
+    const actualRevision = current?.revision ?? 0;
+    if (actualRevision !== opts.expectedRevision) {
+      throw new GenomeStaleError(opts.expectedRevision, actualRevision);
+    }
+  }
+
+  const nextRevision = current?.revision === undefined ? 1 : current.revision + 1;
+  const nextGenome = {
+    ...g,
+    revision: nextRevision,
+    updatedAt: now(),
+  };
+
+  await setEncryptedItem(GENOME_STORE, GENOME_DB_KEY, nextGenome, key);
+  await chrome.storage.local.set({ 'sdh:genome-revision': nextRevision });
 }
 
 export async function wipeGenome(): Promise<void> {
   await deleteItem(GENOME_STORE, GENOME_DB_KEY);
+}
+
+export function onGenomeChange(cb: (revision: number) => void): () => void {
+  const listener = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ): void => {
+    if (areaName !== 'local') return;
+    const change = changes['sdh:genome-revision'];
+    if (typeof change?.newValue === 'number') {
+      cb(change.newValue);
+    }
+  };
+
+  chrome.storage.onChanged.addListener(listener);
+  return () => chrome.storage.onChanged.removeListener(listener);
 }

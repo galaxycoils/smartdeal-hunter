@@ -14,6 +14,10 @@ const { mockBrowser } = vi.hoisted(() => ({
   },
 }));
 
+const { genomeChangeCallbacks } = vi.hoisted(() => ({
+  genomeChangeCallbacks: [] as Array<(revision: number) => void>,
+}));
+
 vi.mock('wxt/browser', () => ({ browser: mockBrowser }));
 
 vi.mock('../../lib/offscreen-manager', () => ({
@@ -28,11 +32,21 @@ vi.mock('../../lib/crypto', () => ({
 vi.mock('../../lib/genome', () => ({
   loadGenome: vi.fn(),
   saveGenome: vi.fn().mockResolvedValue(undefined),
+  onGenomeChange: vi.fn((callback: (revision: number) => void) => {
+    genomeChangeCallbacks.push(callback);
+    return vi.fn();
+  }),
 }));
 
 vi.mock('../../lib/cache', () => ({
   cacheProduct: vi.fn().mockResolvedValue(undefined),
   getCachedProduct: vi.fn(),
+}));
+
+vi.mock('../../lib/storage', () => ({
+  setItem: vi.fn().mockResolvedValue(undefined),
+  STORE_HISTORY_EVENTS: 'history_events',
+  wipeAllData: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../lib/scoring', () => ({
@@ -48,6 +62,7 @@ import { loadGenome, saveGenome } from '../../lib/genome';
 import { getCachedProduct, cacheProduct } from '../../lib/cache';
 import { ensureOffscreen } from '../../lib/offscreen-manager';
 import { calculateFeedbackUpdate } from '../../lib/feedback';
+import { setItem, STORE_HISTORY_EVENTS, wipeAllData } from '../../lib/storage';
 
 type Listener = (msg: unknown, sender: unknown, sendResponse: (r: unknown) => void) => unknown;
 
@@ -75,9 +90,15 @@ const productData = {
 
 describe('Background Service Worker', () => {
   let listener: Listener;
+  let alarmListener: ((alarm: chrome.alarms.Alarm) => Promise<void>) | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    genomeChangeCallbacks.length = 0;
+    alarmListener = undefined;
+    vi.spyOn(chrome.alarms.onAlarm, 'addListener').mockImplementation((callback) => {
+      alarmListener = callback as (alarm: chrome.alarms.Alarm) => Promise<void>;
+    });
     background.main();
     listener = mockBrowser.runtime.onMessage.addListener.mock.calls[0][0] as Listener;
   });
@@ -109,7 +130,41 @@ describe('Background Service Worker', () => {
     });
   });
 
+  describe('scheduled wipe alarm', () => {
+    it('ignores unrelated alarms', async () => {
+      await alarmListener?.({ name: 'other-alarm' });
+      expect(wipeAllData).not.toHaveBeenCalled();
+    });
+
+    it('wipes all data when the scheduled wipe alarm fires without in-flight work', async () => {
+      await alarmListener?.({ name: 'sdh:scheduled-wipe' });
+      expect(wipeAllData).toHaveBeenCalled();
+    });
+
+    it('defers scheduled wipe when in-flight work is present', async () => {
+      const createSpy = vi.spyOn(chrome.alarms, 'create');
+      await chrome.storage.local.set({ 'sdh:in-flight': Date.now() });
+      await alarmListener?.({ name: 'sdh:scheduled-wipe' });
+
+      expect(wipeAllData).not.toHaveBeenCalled();
+      expect(createSpy).toHaveBeenCalledWith('sdh:scheduled-wipe', { when: expect.any(Number) });
+    });
+  });
+
   describe('UPDATE_GENOME', () => {
+    it('subscribes to genome revisions and reloads the genome when they change', async () => {
+      vi.mocked(loadGenome).mockResolvedValue(onboardedGenome);
+      await flush();
+
+      const callback = genomeChangeCallbacks[0];
+      expect(callback).toBeTypeOf('function');
+
+      callback(2);
+      await flush();
+
+      expect(loadGenome).toHaveBeenCalled();
+    });
+
     it('updates genome and saves on cached product + onboarded user', async () => {
       vi.mocked(getCachedProduct).mockResolvedValue(productData as never);
       vi.mocked(loadGenome).mockResolvedValue(onboardedGenome);
@@ -206,6 +261,15 @@ describe('Background Service Worker', () => {
       expect(mockBrowser.tabs.sendMessage).toHaveBeenLastCalledWith(
         42,
         expect.objectContaining({ type: 'RENDER_PANEL' }),
+      );
+      expect(setItem).toHaveBeenCalledWith(
+        STORE_HISTORY_EVENTS,
+        expect.stringMatching(new RegExp(`:${productData.asin}$`)),
+        expect.objectContaining({
+          ts: expect.any(Number),
+          asin: productData.asin,
+          kind: 'analyze',
+        }),
       );
       expect(sendResponse).toHaveBeenCalledWith({ success: true });
     });

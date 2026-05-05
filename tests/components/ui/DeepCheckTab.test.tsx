@@ -29,6 +29,18 @@ describe('DeepCheckTab', () => {
     expect(screen.getByText('Connect to Amazon')).toBeDefined();
   });
 
+  it('loads stored status and last-fetched timestamp on mount', async () => {
+    await chrome.storage.local.set({
+      'sdh:deep-check-status': 'Cached',
+      'sdh:deep-check-last-fetched': 1234,
+    });
+
+    render(<DeepCheckTab />);
+
+    expect(await screen.findByTestId('status-pill')).toHaveTextContent('Cached');
+    expect(screen.getByTestId('last-fetched')).not.toHaveTextContent('Never');
+  });
+
   it('handles successful connection', async () => {
     vi.mocked(AmazonOAuth.connect).mockResolvedValueOnce({
       accessToken: 'test_token',
@@ -116,5 +128,23 @@ describe('DeepCheckTab', () => {
 
     // Should remain connected
     expect(screen.getByTestId('status-connected')).toBeDefined();
+  });
+
+  it('falls back to a generic disconnect error for non-Error throwables', async () => {
+    vi.mocked(AmazonOAuth.connect).mockResolvedValueOnce({} as unknown as AmazonOAuthTokens);
+
+    render(<DeepCheckTab />);
+
+    fireEvent.click(screen.getByText('Connect to Amazon'));
+    await waitFor(() => {
+      expect(screen.getByText('Disconnect')).toBeDefined();
+    });
+
+    vi.mocked(AmazonOAuth.disconnect).mockRejectedValueOnce('bad');
+    fireEvent.click(screen.getByText('Disconnect'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('oauth-error')).toHaveTextContent('Failed to disconnect');
+    });
   });
 });

@@ -1,15 +1,27 @@
 /**
  * Storage layer for SmartDeal Hunter.
  * Wraps IndexedDB for local persistent storage.
+ *
+ * Future-version guard:
+ * If a newer database version is opened by older code, reject before any reads or writes.
  */
 
 import { encryptWithKey, decryptWithKey } from './crypto';
 
 const DB_NAME = 'SmartDealHunterDB';
-const DB_VERSION = 2;
+const DB_VERSION = 4;
 const STORE_GENOME = 'genome';
 export const STORE_PRODUCT_CACHE = 'product_cache';
 export const STORE_ANALYSIS_CACHE = 'analysis_cache';
+export const STORE_HISTORY_EVENTS = 'history_events';
+export const STORE_OAUTH = 'oauth';
+
+export class DBVersionMismatchError extends Error {
+  constructor(actualVersion: number, expectedVersion: number) {
+    super(`Database version ${actualVersion} is newer than supported version ${expectedVersion}`);
+    this.name = 'DBVersionMismatchError';
+  }
+}
 
 export interface StorageResult<T> {
   success: boolean;
@@ -35,9 +47,22 @@ async function getDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_ANALYSIS_CACHE)) {
         db.createObjectStore(STORE_ANALYSIS_CACHE);
       }
+      if (!db.objectStoreNames.contains(STORE_HISTORY_EVENTS)) {
+        db.createObjectStore(STORE_HISTORY_EVENTS);
+      }
+      if (!db.objectStoreNames.contains(STORE_OAUTH)) {
+        db.createObjectStore(STORE_OAUTH);
+      }
     };
 
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (db.version > DB_VERSION) {
+        reject(new DBVersionMismatchError(db.version, DB_VERSION));
+        return;
+      }
+      resolve(db);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -68,6 +93,21 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | un
     const request = store.get(key);
 
     request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**
+ * Gets all items from a store.
+ */
+export async function getAllItems<T>(storeName: string): Promise<T[]> {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result as T[]);
     request.onerror = () => reject(request.error);
   });
 }
@@ -124,13 +164,14 @@ export async function wipeAllData(): Promise<void> {
   const stores = Array.from(db.objectStoreNames);
   const transaction = db.transaction(stores, 'readwrite');
 
-  await Promise.all(
-    stores.map((name) => {
+  await Promise.all([
+    ...stores.map((name) => {
       return new Promise<void>((resolve, reject) => {
         const request = transaction.objectStore(name).clear();
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       });
     }),
-  );
+    chrome.storage.local.remove('sdh:audit-log'),
+  ]);
 }

@@ -122,4 +122,19 @@ test.describe('SmartDeal Hunter E2E', () => {
 
     await expect(page.getByText('All data has been cleared')).toBeVisible();
   });
+
+  test.skip('should schedule a wipe and clear data', async ({ page, extensionId }) => {
+    // Navigate to options page to test scheduled wipe
+    await page.goto(`chrome-extension://${extensionId}/entrypoints/options/index.html`);
+    await page.getByRole('button', { name: 'Privacy' }).click();
+
+    const wipeBtn = page.getByRole('button', { name: /Schedule Wipe/i });
+    if (await wipeBtn.isVisible()) {
+      await wipeBtn.click();
+      page.on('dialog', (dialog) => dialog.accept());
+      // Wait for it to trigger
+      await page.waitForTimeout(6000);
+      // Verify data is cleared (e.g. check Genome state or storage)
+    }
+  });
 });

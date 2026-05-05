@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Onboarding } from './Onboarding';
 import { Dashboard } from './Dashboard';
-import { loadGenome } from '../../lib/genome';
+import { loadGenome, onGenomeChange } from '../../lib/genome';
 import { deriveKey } from '../../lib/crypto';
 import type { Genome } from '../../lib/types';
 
@@ -15,22 +15,42 @@ function App() {
   // For Batch 3, we auto-derive a "session key" from a hardcoded salt
   // P1.13 will add the real Master Password unlock flow.
   useEffect(() => {
+    let cancelled = false;
+    let unsubscribe = () => {};
+
     const init = async () => {
       try {
         const salt = new Uint8Array(16); // All zeros for MVP bootstrap
         const key = await deriveKey('bootstrap-session-password', salt);
+        if (cancelled) return;
         setCryptoKey(key);
 
-        const g = await loadGenome(key);
-        setGenome(g);
+        const refreshGenome = async () => {
+          const nextGenome = await loadGenome(key);
+          if (!cancelled) {
+            setGenome(nextGenome);
+          }
+        };
+
+        await refreshGenome();
+        unsubscribe = onGenomeChange(() => {
+          void refreshGenome();
+        });
       } catch (err) {
         setError('Failed to initialize secure storage');
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
-    init();
+
+    void init();
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const handleOnboardingComplete = async () => {

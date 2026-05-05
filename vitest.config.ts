@@ -25,6 +25,8 @@ export default defineConfig({
       exclude: [
         '**/*.d.ts',
         '**/*.config.{ts,js}',
+        '**/*.html',
+        '**/.DS_Store',
         'tests/e2e/**',
         'entrypoints/popup/**',
         'entrypoints/options/**',

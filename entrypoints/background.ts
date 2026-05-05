@@ -8,14 +8,37 @@ import type {
   RenderPanelMessage,
   UpdateGenomeRequest,
 } from '../lib/messaging/types';
-import { loadGenome, saveGenome } from '../lib/genome';
+import { loadGenome, onGenomeChange, saveGenome } from '../lib/genome';
 import { deriveKey } from '../lib/crypto';
 import { cacheProduct, getCachedProduct } from '../lib/cache';
 import { toAttributeVector } from '../lib/scoring';
 import { calculateFeedbackUpdate } from '../lib/feedback';
+import { setItem, STORE_HISTORY_EVENTS, wipeAllData } from '../lib/storage';
 
 export default defineBackground(() => {
   console.log('[smartdeal-hunter] background ready', { id: browser.runtime.id });
+
+  chrome.alarms.onAlarm.addListener(async (alarm: chrome.alarms.Alarm) => {
+    if (alarm.name !== 'sdh:scheduled-wipe') {
+      return;
+    }
+
+    const stored = await chrome.storage.local.get('sdh:in-flight');
+    if (typeof stored['sdh:in-flight'] === 'number') {
+      await chrome.alarms.create('sdh:scheduled-wipe', { when: Date.now() + 30_000 });
+      return;
+    }
+
+    await wipeAllData();
+  });
+
+  void (async () => {
+    const salt = new Uint8Array(16);
+    const key = await deriveKey('bootstrap-session-password', salt);
+    onGenomeChange(() => {
+      void loadGenome(key);
+    });
+  })();
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Legacy support for START_ANALYSIS or basic offscreen proxying
@@ -142,6 +165,12 @@ export default defineBackground(() => {
     };
 
     await browser.tabs.sendMessage(targetTabId, renderReq);
+    const ts = Date.now();
+    await setItem(STORE_HISTORY_EVENTS, `${ts}:${productData.asin}`, {
+      ts,
+      asin: productData.asin,
+      kind: 'analyze',
+    });
 
     return true;
   }
