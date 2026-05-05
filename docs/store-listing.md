@@ -105,6 +105,14 @@ Bug reports and feedback are welcome.
 - **Encryption at rest**: AES-GCM-256, 12-byte random IV per record, key
   derived via PBKDF2 (600K iterations).
 
+## Phase 2 Release Notes
+
+- Added Ethical Bundle Optimizer for local-only, privacy-respecting item combinations.
+- Integrated Amazon Creators API Deep Check with local 1-hr caching and rate-limits.
+- Overhauled options page with tabbed architecture: Settings, Privacy, Genome, DeepCheck, About.
+- Added comprehensive Privacy controls: toggle opt-ins, view audit log, and scheduled wipe.
+- Real-time Cross-Page Genome synchronization.
+
 ## Screenshots (5 × 1280×800 PNG required)
 
 To be captured manually before submission. Per Chrome Web Store policy:
@@ -116,6 +124,8 @@ To be captured manually before submission. Per Chrome Web Store policy:
 | 3   | `03-scout-panel.png`     | Amazon product page with the injected scout panel overlay visible.                            |
 | 4   | `04-options-privacy.png` | Options page showing the Privacy section with toggles, audit log, and Export / Wipe controls. |
 | 5   | `05-feedback.png`        | Feedback flow: Saved / Not interested / Purchased buttons.                                    |
+| 6   | `06-bundle-panel.png`    | Bundle Recommendations UI.                                                                    |
+| 7   | `07-genome-editor.png`   | Genome Editor UI with sliders and JSON import/export.                                         |
 
 Capture procedure:
 

@@ -18,4 +18,10 @@ export default defineConfig({
     },
     minimum_chrome_version: '116',
   },
+  // Basic global error listener (no external tracking, robust local logging)
+  hooks: {
+    'build:manifestGenerated': (wxt, manifest) => {
+      console.log('Manifest generated with version:', manifest.version);
+    },
+  },
 });

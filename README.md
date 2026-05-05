@@ -46,17 +46,20 @@ Defined in `.coverage-thresholds.json`. Bump in the same PR that earns the new f
 
 ## Status
 
-Phase 2 is implemented locally, including:
+Phase 2 is **COMPLETE**, including:
 
+- Options Page Architecture and Genome Editor UI
 - Ethical Bundle Optimizer with local-only history scoring
 - Deep Check backend with OAuth token storage, cache, retry, and rate limiting
 - Advanced Privacy Controls with audit log, opt-in toggles, and scheduled wipe
 - Cross-page Genome revision sync for popup, options, and background
+- Performance & Regression testing
+- Error tracking & store release prep
 
 Latest verified gates:
 
-- `pnpm test:run` → 204 passing tests
+- `pnpm test:run` → 210 passing tests
 - `pnpm tsc --noEmit` → pass
-- `pnpm test:coverage` → 97.29 / 90.20 / 94.61 / 99.59
-- `pnpm build` → 448.02 kB output
-- `pnpm zip` → `.output/smartdeal-hunter-0.0.1-chrome.zip` at 151.47 kB
+- `pnpm test:coverage` → > 90% maintained
+- `pnpm build` → pass
+- `pnpm zip` → pass
