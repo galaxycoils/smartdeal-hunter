@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Amazon.ca: Mock CA Headphones</title>
+  </head>
+  <body>
+    <!-- en-CA exercises currency-vs-locale decoupling: CAD currency, USD-shaped digit grouping -->
+    <div id="dp">
+      <span id="productTitle">Mock CA Headphones</span>
+      <span class="a-price"><span class="a-offscreen">CDN$ 159.99</span></span>
+      <div id="acrPopover" title="4.5 out of 5 stars">
+        <span class="a-icon-alt">4.5 out of 5 stars</span>
+      </div>
+      <span id="acrCustomerReviewText">800 ratings</span>
+      <img id="landingImage" src="https://m.media-amazon.com/images/I/ca.jpg" alt="CA" />
+    </div>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Mock CA Headphones",
+        "image": "https://m.media-amazon.com/images/I/ca.jpg",
+        "description": "Canadian wireless headphones.",
+        "brand": { "@type": "Brand", "name": "Mock" },
+        "offers": { "@type": "Offer", "priceCurrency": "CAD", "price": "159.99" }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr-FR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Amazon.fr: Mock FR Casque</title>
+  </head>
+  <body>
+    <div id="dp">
+      <span id="productTitle">Mock FR Casque</span>
+      <span class="a-price"><span class="a-offscreen">109,99 €</span></span>
+      <div id="acrPopover" title="4,5 sur 5 étoiles">
+        <span class="a-icon-alt">4,5 sur 5 étoiles</span>
+      </div>
+      <span id="acrCustomerReviewText">1 200 évaluations</span>
+      <img id="landingImage" src="https://m.media-amazon.com/images/I/fr.jpg" alt="FR" />
+    </div>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Mock FR Casque",
+        "image": "https://m.media-amazon.com/images/I/fr.jpg",
+        "description": "Casque sans fil français.",
+        "brand": { "@type": "Brand", "name": "Mock" },
+        "offers": { "@type": "Offer", "priceCurrency": "EUR", "price": "109.99" }
+      }
+    </script>
+  </body>
+</html>
