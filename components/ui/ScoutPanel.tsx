@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from './Card';
 import { Button } from './Button';
+import { LineChart, Loader2 } from 'lucide-react';
+import { PriceChart } from './PriceChart';
+import { get30DayPriceHistory, PriceRecord } from '../../lib/price-history';
 
 export interface ScoutPanelProps {
   asin: string;
@@ -17,6 +20,26 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   onClose,
   onFeedback,
 }) => {
+  const [showHistory, setShowHistory] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyData, setHistoryData] = useState<PriceRecord[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (showHistory && historyData.length === 0) {
+      setIsLoadingHistory(true);
+      get30DayPriceHistory(_asin).then((data) => {
+        if (isMounted) {
+          setHistoryData(data);
+          setIsLoadingHistory(false);
+        }
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [showHistory, _asin, historyData.length]);
+
   return (
     <Card className="w-80 shadow-lg border-gray-300 font-sans text-gray-900">
       <CardHeader className="flex justify-between items-center bg-gray-50 py-3">
@@ -57,6 +80,30 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
             </span>
             <span className="text-3xl font-extrabold text-green-600">{personalFit}</span>
           </div>
+        </div>
+
+        <Button
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2 mt-2"
+          onClick={() => setShowHistory(!showHistory)}
+          aria-expanded={showHistory}
+        >
+          <LineChart className="w-4 h-4" />
+          {showHistory ? 'Hide Price History' : 'View Price History'}
+        </Button>
+
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showHistory ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
+          }`}
+        >
+          {isLoadingHistory ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          ) : historyData.length > 0 ? (
+            <PriceChart data={historyData} />
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2 mt-2">

@@ -1,10 +1,27 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { ScoutPanel } from '../../../components/ui/ScoutPanel';
+import { get30DayPriceHistory } from '../../../lib/price-history';
+
+vi.mock('../../../lib/price-history', () => ({
+  get30DayPriceHistory: vi.fn(),
+}));
+
+// mock ResponsiveContainer to avoid ResizeObserver error in tests
+vi.mock('recharts', async () => {
+  const OriginalRechartsModule = await vi.importActual<typeof import('recharts')>('recharts');
+  return {
+    ...OriginalRechartsModule,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div style={{ width: 800, height: 800 }}>{children}</div>
+    ),
+  };
+});
 
 describe('ScoutPanel', () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
 
   const defaultProps = {
@@ -53,5 +70,38 @@ describe('ScoutPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Purchased' }));
     expect(onFeedback).toHaveBeenCalledWith('purchased');
+  });
+
+  it('renders View Price History toggle and handles click', async () => {
+    const mockData = [
+      { date: Date.now() - 86400000, price: 100 },
+      { date: Date.now(), price: 95 },
+    ];
+    vi.mocked(get30DayPriceHistory).mockResolvedValue(mockData);
+
+    render(<ScoutPanel {...defaultProps} />);
+
+    // Toggle button should be present
+    const toggleButton = screen.getByRole('button', { name: /View Price History/i });
+    expect(toggleButton).toBeTruthy();
+
+    // Click to show history
+    fireEvent.click(toggleButton);
+
+    // Should fetch history
+    expect(get30DayPriceHistory).toHaveBeenCalledWith(defaultProps.asin);
+
+    // Wait for the chart to be rendered
+    await waitFor(() => {
+      expect(screen.getByText('30-Day Price Trend')).toBeTruthy();
+    });
+
+    // Toggle again to hide
+    fireEvent.click(toggleButton);
+
+    // Chart container should have opacity-0 to be hidden with transition
+    const chartTitle = screen.getByText('30-Day Price Trend');
+    const container = chartTitle.closest('.overflow-hidden');
+    expect(container?.className).toContain('opacity-0');
   });
 });

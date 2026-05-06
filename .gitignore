@@ -30,6 +30,17 @@ dist/
 *.zip
 *.tsbuildinfo
 
+# Local agent / DB scratch (not part of repo)
+.helloagents/
+.beads/
+.gemini/
+.claude/
+.claude-flow/
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db
+/STATE_HANDOFF.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
