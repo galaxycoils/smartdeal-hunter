@@ -7,35 +7,25 @@ This project uses the same rules as `CLAUDE.md`. Read it first.
 Before doing ANYTHING in this repo, read these files in order:
 
 1. `CLAUDE.md` — project rules (TDD, plan-review gate, subagent discipline, coverage ratchet). Apply to your work as if it said GEMINI.md.
-2. `conductor/plan-phase1.md` — original Phase 1 roadmap.
-3. `docs/spec/SUMMARY.md` — task table + rationale.
+2. `conductor/STATE_HANDOFF.md` — current version status and release history.
+3. `docs/cws-submission-checklist.md` — store listing details for current version.
 
-## Current state (2026-05-05)
+## Current state (2026-05-06)
 
-Phase 1 (P1.1 - P1.15) is **DONE and COMMITTED**.
-Phase 2 (P2.1 - P2.11) is **DONE and COMMITTED**.
+**Phase 1, 2, 3, and 4 are COMPLETE and COMMITTED.**
+**Version 0.1.0 is officially released and tagged.**
 
-- All unit/integration tests pass. Lint clean.
-- Coverage: **> 90%** (threshold 90% maintained).
+- **Tests**: 281 passing.
+- **Coverage**: 97.72% (Statements) / 91.4% (Branches).
+- **Bundle**: 1.21MB total / 375KB ZIP.
+- **Status**: Ready for Chrome Web Store submission.
 
-## Next Task: Phase 3
+## Release Summary v0.1.0
 
-We are now ready for **Phase 3 (Post-Release & Scaling)**:
-
-- **P3.1**: Multi-store support (Amazon UK/DE/JP)
-- **P3.2**: Price history visualization
-- **P3.3**: Advanced local LLM sentiment analysis
-
-## Hard rules (from CLAUDE.md)
-
-- TDD strict — failing test first, then minimal impl.
-- NEVER `--no-verify`. NEVER `git push --force` without user approval.
-- Subagent file-scope is hard. Define it in the prompt; revert if violated.
-- PBKDF2 600K only via `deriveKey` (called once per session). Hot path uses `CryptoKey`.
-- Coverage floor only goes up. Current floor: 70%. Next bump (90%) after P1.15.
-- Caveman ULTRA mode for the user. Code/commits/PRs: write normal.
-- Constant memory updates. Checkpoint to `project_smartdeal_overview.md` at every meaningful step.
-- After every commit: update Obsidian vault `STATE_HANDOFF.md` at `/Users/cmd/Documents/Obsidian Vault/PROJECTS/SmartDeal-Hunter/`.
+- **International**: support for US, UK, DE, JP, CA, FR, IT, ES.
+- **Visuals**: 30-day interactive price history charts (Recharts).
+- **Intelligence**: Gemini Nano on-device sentiment summary chain.
+- **Compliance**: Comprehensive privacy controls + audit log.
 
 ## Verification commands
 
@@ -43,9 +33,9 @@ We are now ready for **Phase 3 (Post-Release & Scaling)**:
 git status
 pnpm test:run          # all green expected
 pnpm tsc --noEmit      # 0 errors expected
-pnpm test:coverage     # measure vs 70% floor
+pnpm test:coverage     # measure vs 91% floor
 ```
 
-## When in doubt
+## Next Task
 
-Ask the user.
+Wait for CWS approval of v0.1.0. Future roadmap: Phase 5 (Marketplace comparisons & Price alerts).
