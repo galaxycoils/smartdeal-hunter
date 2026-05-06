@@ -1,8 +1,8 @@
 # 🏹 SmartDeal Hunter
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/tahamtandariush/smartdeal-hunter/releases)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-v0.0.1-green.svg)](https://chrome.google.com/webstore)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/tahamtandariush/smartdeal-hunter/releases)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-v0.1.0-green.svg)](https://chrome.google.com/webstore)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 

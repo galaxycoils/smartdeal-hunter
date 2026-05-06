@@ -1,4 +1,4 @@
-# Chrome Web Store Listing — SmartDeal Hunter v0.0.1
+# Chrome Web Store Listing — SmartDeal Hunter v0.1.0
 
 Source-of-truth copy for the Chrome Web Store dev-channel submission. Pasteable
 into the developer dashboard.
@@ -7,7 +7,7 @@ into the developer dashboard.
 
 - **Name**: SmartDeal Hunter
 - **Short name**: SmartDeal
-- **Version**: 0.0.1
+- **Version**: 0.1.0
 - **Category**: Shopping
 - **Languages**: English (United States)
 - **Visibility**: Public (Phase 2 Release)
@@ -83,7 +83,7 @@ Bug reports and feedback are welcome.
 | `storage`           | Persist the user's encrypted preference profile (the "Genome") and a small product cache locally via IndexedDB. Never transmitted off-device.                                       |
 | `alarms`            | Schedule a daily cleanup pass over the product cache to delete entries older than 7 days.                                                                                           |
 | `offscreen`         | Run on-device ML inference (ONNX Runtime Web on WASM/WebGPU) inside an isolated Offscreen Document, since service workers cannot host these APIs.                                   |
-| host `*.amazon.com` | MVP only supports Amazon US product pages. Other Amazon domains and other retailers are out of scope for v0.0.1.                                                                    |
+| host `*.amazon.com` | MVP only supports Amazon US product pages. Other Amazon domains and other retailers are out of scope for v0.1.0 (multi-store added in Phase 3 — UK/DE/JP/CA/FR/IT/ES).              |
 
 ## Privacy disclosures (CWS Privacy Practices form)
 

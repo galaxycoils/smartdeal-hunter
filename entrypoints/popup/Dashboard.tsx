@@ -179,7 +179,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ genome }) => {
           </div>
         </div>
         <Badge variant="outline" className="font-mono text-[10px]">
-          v0.0.1
+          v0.1.0
         </Badge>
       </header>
 

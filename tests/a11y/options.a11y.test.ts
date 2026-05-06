@@ -65,7 +65,7 @@ vi.mock('wxt/browser', () => ({
     },
     runtime: {
       sendMessage: vi.fn(),
-      getManifest: vi.fn().mockReturnValue({ version: '0.0.1', name: 'SmartDeal Hunter' }),
+      getManifest: vi.fn().mockReturnValue({ version: '0.1.0', name: 'SmartDeal Hunter' }),
       id: 'mock-extension-id',
     },
     alarms: { create: vi.fn(), clear: vi.fn(), getAll: vi.fn().mockResolvedValue([]) },

@@ -81,7 +81,7 @@ const mockBrowser = {
     id: 'test-extension-id',
     getContexts: vi.fn(),
     getURL: vi.fn((path: string) => `chrome-extension://id/${path}`),
-    getManifest: vi.fn(() => ({ version: '0.0.1' })),
+    getManifest: vi.fn(() => ({ version: '0.1.0' })),
     sendMessage: vi.fn(),
     onMessage: {
       addListener: vi.fn(),
