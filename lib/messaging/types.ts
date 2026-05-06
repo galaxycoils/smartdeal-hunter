@@ -20,6 +20,9 @@ export type ScrapeResponse =
         asin: string;
         trueValue: number;
         personalFit: number;
+        price: number | null;
+        currency: string;
+        region: string;
       };
     }
   | { success: false; error: string };

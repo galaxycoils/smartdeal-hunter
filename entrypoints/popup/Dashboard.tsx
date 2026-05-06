@@ -25,7 +25,14 @@ interface DashboardProps {
 }
 
 type ScoutStatus = 'idle' | 'scouting' | 'success' | 'error';
-type ScoutResult = { asin: string; trueValue: number; personalFit: number };
+type ScoutResult = {
+  asin: string;
+  trueValue: number;
+  personalFit: number;
+  price: number | null;
+  currency: string;
+  region: string;
+};
 
 const AMAZON_PRODUCT_PATH = /\/(dp|gp\/product)\/[A-Z0-9]{10}/i;
 
@@ -33,7 +40,10 @@ function isAmazonProductUrl(url: string | undefined): boolean {
   if (!url) return false;
   try {
     const u = new URL(url);
-    return /(^|\.)amazon\.com$/i.test(u.hostname) && AMAZON_PRODUCT_PATH.test(u.pathname);
+    return (
+      /(^|\.)amazon\.(com|co\.uk|de|co\.jp)$/i.test(u.hostname) &&
+      AMAZON_PRODUCT_PATH.test(u.pathname)
+    );
   } catch {
     return false;
   }
@@ -239,11 +249,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ genome }) => {
               <CheckCircle2 className="size-4 text-success" />
               <CardTitle className="text-sm">Scout result</CardTitle>
             </div>
-            <Badge variant="outline" className="font-mono text-[10px]">
-              {result.asin}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="font-mono text-[10px]">
+                {result.region}
+              </Badge>
+              <Badge variant="outline" className="font-mono text-[10px]">
+                {result.asin}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
+            <div className="col-span-2 mb-2 rounded-lg border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Detected Price</p>
+              <p className="text-lg font-bold">
+                {result.price !== null
+                  ? new Intl.NumberFormat(undefined, {
+                      style: 'currency',
+                      currency: result.currency || 'USD',
+                    }).format(result.price)
+                  : 'N/A'}
+              </p>
+            </div>
             <ScoreTile
               label="True Value"
               value={Math.round(result.trueValue)}

@@ -7,6 +7,7 @@ import {
   MAX_PERSONAL_FIT,
   DISCOUNT_THRESHOLD,
 } from './scoring-constants';
+import { getMaxPrice } from './currency';
 
 /**
  * Extracts brand name from ProductData (jsonLd or title)
@@ -87,8 +88,9 @@ export const toAttributeVector = (data: ProductData): ProductAttributeVector => 
       ? Math.max(0, (data.listPrice - data.price) / data.listPrice)
       : 0;
 
-  // Normalize price: 0 is expensive ($200+), 1 is cheap ($0)
-  const normalizedPrice = data.price ? Math.max(0, 1 - data.price / 200) : 0.5;
+  // Normalize price: 0 is expensive (maxPrice+), 1 is cheap ($0)
+  const maxPrice = getMaxPrice(data.currency || 'USD');
+  const normalizedPrice = data.price ? Math.max(0, 1 - data.price / maxPrice) : 0.5;
 
   return {
     unit_price: normalizedPrice,
