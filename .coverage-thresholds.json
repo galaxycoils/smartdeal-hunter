@@ -1,9 +1,11 @@
 {
   "global": {
-    "statements": 90,
-    "branches": 90,
-    "functions": 90,
-    "lines": 90
+    "statements": 91,
+    "branches": 91,
+    "functions": 91,
+    "lines": 91
   },
-  "_ratchet_plan": "Bootstrap 0% -> P1.5 50% -> P1.10 70% -> P1.15 90% (current)"
+  "_ratchet_plan": "Bootstrap 0% -> P1.5 50% -> P1.10 70% -> P1.15 90% -> P4 91% (current)",
+  "_rollback": "If a future change drops any axis below 91%, revert this file to floor 90 in the same PR (do NOT skip vitest gates) and document the regression in conductor/STATE_HANDOFF.md so the next ratchet attempt knows the cause.",
+  "_phase4_evidence": "Coverage measured 97.72/91.40/94.97/99.65 after WU-1 + WU-10 (commits f956c13 + 8341f8d). Margin = stmts 6.72 / branches 0.40 / funcs 3.97 / lines 8.65. Branches has thinnest margin -- watch on every PR."
 }
