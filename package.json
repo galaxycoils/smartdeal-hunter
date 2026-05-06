@@ -20,6 +20,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "perf": "vitest run tests/performance",
     "prepare": "husky",
     "postinstall": "wxt prepare"
   },

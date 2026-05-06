@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "captured": "2026-05-06",
+    "host": "darwin macOS, M-series",
+    "node": "vitest 4.1.5 + happy-dom 20.9.0",
+    "purpose": "Phase 4 WU-4 perf budget baseline — pinned BEFORE WU-5 bundle split so WU-5 has a regression target.",
+    "rerun": "pnpm test:run -- tests/performance/*.perf.test.ts"
+  },
+  "budgets": {
+    "chart_render_p95_ms": 800,
+    "scrape_latency_p95_ms": 200,
+    "sentiment_heuristic_p95_ms": 50,
+    "sentiment_nano_mock_p95_ms": 1500
+  },
+  "notes": [
+    "Real Gemini Nano latency on hardware can exceed 1500 ms p95 cold. The mocked-summarizer test in tests/performance/sentiment-latency.perf.test.ts asserts the call-shape works under the warm budget; the hardware budget is documented in docs/perf-budget.md and verified manually before each release.",
+    "scrape latency uses happy-dom DOMParser; built extension in Chrome will be faster (V8 + native DOM).",
+    "chart render uses mocked ResponsiveContainer because happy-dom lacks ResizeObserver. The LineChart subtree is the real cost driver and is unaltered."
+  ]
+}
