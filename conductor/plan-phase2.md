@@ -1,41 +1,50 @@
-# Phase 2 — Extended MVP
+# Phase 3 — Scaling & Intelligence
 
-Goal: Ethical Bundle Optimizer, analysis cache, Amazon Creators API (Deep Check), full Options Page, prod CWS release.
+**Objective:** Expand SmartDeal Hunter's utility beyond Amazon US and deepen price/sentiment intelligence via local-first visualization and advanced LLM integration.
 
-## Batch 1 (P2.1)
+## Tasks
 
-**Task:** P2.1 Options Page Architecture (Tabs: Settings / Privacy / Genome / DeepCheck / About)
-**Deps:** P1.9 (done)
-**Owner:** Frontend
+### P3.1 Multi-Store Expansion
 
-### Architecture / Tech Stack
+**Goal:** Support major Amazon international domains.
 
-- Frontend: WXT + Vite + React 19 + Tailwind CSS + shadcn/ui inspired components.
-- State: React local state for tabs.
+- [ ] Implement locale-aware scraper logic (Amazon UK, DE, JP, CA, FR, IT, ES).
+- [ ] Add currency normalization engine for Genome scoring consistency.
+- [ ] Update UI to display local pricing and shipping availability.
+- [ ] **Acceptance:** Validated ASIN detection and scoring on 3+ non-US domains.
 
-### Acceptance Criteria
+### P3.2 Price History Visualization
 
-- [ ] Options page has a functional tab navigation system.
-- [ ] Tabs include: Settings, Privacy, Genome, DeepCheck, About.
-- [ ] Existing privacy and export/wipe logic is moved into the "Privacy" tab.
-- [ ] Other tabs render placeholders until their tasks (e.g. P2.2, P2.7) are implemented.
-- [ ] Accessibility: Keyboard navigable tabs using ARIA `role="tablist"`, `role="tab"`, `role="tabpanel"`.
-- [ ] 90% coverage threshold maintained.
+**Goal:** Provide on-device price context without external trackers.
 
-### Plan
+- [ ] Implement local database for price tracking (IndexedDB/WXT Storage).
+- [ ] Add Chart.js or lightweight SVG charting to Scout Panel and Popup.
+- [ ] Calculate and display "Price Percentile" against seen local history.
+- [ ] **Acceptance:** Interactive price history chart renders in Shadow-DOM panel.
 
-1. **Components**: Create `components/ui/Tabs.tsx` to handle tab state and accessibility.
-2. **Refactor**: Update `entrypoints/options/App.tsx` to utilize `Tabs` component.
-3. **Migration**: Move existing export/wipe functionality into a `<PrivacyTab />` component.
-4. **Placeholders**: Create `<SettingsTab />`, `<GenomeTab />`, `<DeepCheckTab />`, `<AboutTab />` placeholders.
-5. **Testing**: Update `tests/entrypoints/options/App.test.tsx` (if exists) or create new tests to verify tab switching and ARIA roles. Create tests for `Tabs` component.
+### P3.3 Advanced Local LLM Sentiment
 
-### Verification
+**Goal:** Upgrade "True Value" using local review summarization.
 
-- `pnpm test:run`
-- `pnpm tsc --noEmit`
-- `pnpm test:coverage`
+- [ ] Integrate Gemini Nano (Chrome built-in AI) or lightweight ONNX model for review summary.
+- [ ] Extract "Pros/Cons" from top 10 local reviews on-device.
+- [ ] Factor summary sentiment into the Genome 'Personal Fit' score.
+- [ ] **Acceptance:** 1-paragraph on-device review summary appears in Deep Check tab.
 
-### Next Steps
+### P3.4 Visual Identity & Assets
 
-Once this plan is approved via Plan Review Gate, implement the changes.
+**Goal:** Move from bootstrap icons to branded professional assets.
+
+- [ ] Generate unique brand mark and promotional tiles (docs/store-assets).
+- [ ] Implement consistent animation layer (framer-motion or shadcn/animate).
+- [ ] **Acceptance:** 100% of 'bootstrap' visual debt replaced with bespoke design.
+
+## Technical Mandates
+
+1. **Zero Cloud:** All P3 data (price history, LLM summaries) must remain local.
+2. **Bundle Size:** Maintain < 5MB production build (inc. model assets if packaged).
+3. **Performance:** Scrape + Chart render < 800ms.
+
+## Dependency Order
+
+P3.1 (Expansion) -> P3.2 (History) -> P3.3 (Intelligence)

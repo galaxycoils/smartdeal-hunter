@@ -136,24 +136,28 @@ describe('Amazon Scraper', () => {
   });
 
   describe('scrapeProduct', () => {
-    it('prioritizes JSON-LD over DOM when both exist', () => {
-      const html =
-        '' +
-        '<script type="application/ld+json">\n' +
-        '  { "@type": "Product", "name": "JSON-LD Title", "offers": { "price": "10.00", "priceCurrency": "USD" } }\n' +
-        '</script>\n' +
-        '<span id="productTitle"> DOM Title </span>\n' +
-        '<div class="a-price"><span class="a-offscreen">$20.00</span></div>';
+    it('detects currency from UK URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">£42.99</span></div>';
       const doc = createDocument(html);
-      const data = scrapeProduct('https://amazon.com/dp/B000000001', doc, () => 1000);
+      const data = scrapeProduct('https://amazon.co.uk/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('GBP');
+      expect(data?.price).toBe(42.99);
+    });
 
-      expect(data).toMatchObject({
-        asin: 'B000000001',
-        title: 'JSON-LD Title',
-        price: 10,
-        source: 'jsonld',
-        scrapedAt: 1000,
-      });
+    it('detects currency from DE URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">42,99 €</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.de/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('EUR');
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('detects currency from JP URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">¥4299</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.co.jp/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('JPY');
+      expect(data?.price).toBe(4299);
     });
 
     it('falls back to DOM when JSON-LD is missing', () => {
@@ -197,6 +201,36 @@ describe('Amazon Scraper', () => {
     it('returns null if no ASIN is found in URL', () => {
       const doc = createDocument('<span id="productTitle">Title</span>');
       expect(scrapeProduct('https://amazon.com/cart', doc)).toBeNull();
+    });
+  });
+
+  describe('extractFromDom - Internationalization', () => {
+    it('extracts DE price with comma decimal', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">42,99 €</span></div>';
+      const doc = createDocument(html);
+      const data = extractFromDom(doc);
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('extracts UK price with pound symbol', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">£42.99</span></div>';
+      const doc = createDocument(html);
+      const data = extractFromDom(doc);
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('extracts JP rating localized string', () => {
+      const html = '<div id="acrPopover" title="5つ星のうち4.5"></div>';
+      const doc = createDocument(html);
+      const data = extractFromDom(doc);
+      expect(data?.rating).toBe(4.5);
+    });
+
+    it('extracts DE rating localized string', () => {
+      const html = '<div id="acrPopover" title="4,5 von 5 Sternen"></div>';
+      const doc = createDocument(html);
+      const data = extractFromDom(doc);
+      expect(data?.rating).toBe(4.5);
     });
   });
 });

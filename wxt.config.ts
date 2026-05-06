@@ -16,7 +16,16 @@ export default defineConfig({
     author: { email: 'tahamtandariush@gmail.com' },
     homepage_url: 'https://github.com/tahamtandariush/smartdeal-hunter',
     permissions: ['activeTab', 'scripting', 'storage', 'alarms', 'offscreen'],
-    host_permissions: ['https://*.amazon.com/*'],
+    host_permissions: [
+      'https://*.amazon.com/*',
+      'https://*.amazon.co.uk/*',
+      'https://*.amazon.de/*',
+      'https://*.amazon.co.jp/*',
+      'https://*.amazon.ca/*',
+      'https://*.amazon.fr/*',
+      'https://*.amazon.it/*',
+      'https://*.amazon.es/*',
+    ],
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     },

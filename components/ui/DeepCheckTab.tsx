@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AmazonOAuth } from '../../lib/amazon-oauth';
 import { Button } from './Button';
 import { Card, CardContent, CardHeader } from './Card';
+import { getSentimentSummary } from '../../lib/sentiment';
 
 type DeepCheckStatus = 'Idle' | 'Loading' | 'Cached' | 'RateLimited' | 'OptedOut' | 'AuthError';
 
@@ -11,6 +12,7 @@ export const DeepCheckTab: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<DeepCheckStatus>('Idle');
   const [lastFetched, setLastFetched] = useState<number | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   useEffect(() => {
     const loadStatus = async () => {
@@ -24,6 +26,12 @@ export const DeepCheckTab: React.FC = () => {
       if (typeof stored['sdh:deep-check-last-fetched'] === 'number') {
         setLastFetched(stored['sdh:deep-check-last-fetched']);
       }
+
+      // Load mock sentiment
+      const summary = await getSentimentSummary(
+        'This is a sample description of the current item state to be summarized by AI.',
+      );
+      setAiSummary(summary);
     };
     void loadStatus();
   }, []);
@@ -84,6 +92,16 @@ export const DeepCheckTab: React.FC = () => {
             {lastFetched ? new Date(lastFetched).toLocaleString() : 'Never'}
           </span>
         </p>
+
+        {aiSummary && (
+          <div
+            className="bg-blue-50 border border-blue-200 p-4 rounded mb-4"
+            data-testid="ai-summary"
+          >
+            <h3 className="font-semibold text-blue-800 text-sm mb-1">AI Summary</h3>
+            <p className="text-sm text-blue-600">{aiSummary}</p>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded mb-4" data-testid="oauth-error">

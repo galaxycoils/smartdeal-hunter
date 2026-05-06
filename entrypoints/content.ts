@@ -7,7 +7,16 @@ import { ScoutPanel } from '../components/ui/ScoutPanel';
 let uiInstance: { remove: () => void; mount: () => void } | null = null;
 
 export default defineContentScript({
-  matches: ['https://*.amazon.com/*'],
+  matches: [
+    'https://*.amazon.com/*',
+    'https://*.amazon.co.uk/*',
+    'https://*.amazon.de/*',
+    'https://*.amazon.co.jp/*',
+    'https://*.amazon.ca/*',
+    'https://*.amazon.fr/*',
+    'https://*.amazon.it/*',
+    'https://*.amazon.es/*',
+  ],
   runAt: 'document_idle',
   async main(ctx) {
     browser.runtime.onMessage.addListener((msg: ContentMessage, _sender, sendResponse) => {

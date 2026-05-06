@@ -41,7 +41,7 @@ function isAmazonProductUrl(url: string | undefined): boolean {
   try {
     const u = new URL(url);
     return (
-      /(^|\.)amazon\.(com|co\.uk|de|co\.jp)$/i.test(u.hostname) &&
+      /(^|\.)amazon\.(com|co\.uk|de|co\.jp|ca|fr|it|es)$/i.test(u.hostname) &&
       AMAZON_PRODUCT_PATH.test(u.pathname)
     );
   } catch {

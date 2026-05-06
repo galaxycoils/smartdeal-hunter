@@ -1,15 +1,19 @@
 import * as React from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
+    <motion.div
+      ref={ref as React.ForwardedRef<HTMLDivElement>}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className={cn(
         'rounded-xl border border-border bg-card text-card-foreground shadow-sm',
         className,
       )}
-      {...props}
+      {...(props as HTMLMotionProps<'div'>)}
     />
   ),
 );
