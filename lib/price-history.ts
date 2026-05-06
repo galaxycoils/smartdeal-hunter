@@ -37,3 +37,9 @@ export const getPriceHistory = async (asin: string): Promise<PriceRecord[]> => {
     .sort((a, b) => a.date - b.date)
     .map(({ date, price }) => ({ date, price }));
 };
+
+export const get30DayPriceHistory = async (asin: string): Promise<PriceRecord[]> => {
+  const history = await getPriceHistory(asin);
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  return history.filter((record) => record.date >= thirtyDaysAgo);
+};

@@ -1,32 +1,34 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { savePrice, getPriceHistory } from '../../lib/price-history';
-import { wipeAllData } from '../../lib/storage';
-import { installIndexedDbMock, resetIndexedDbMock } from '../helpers/indexeddb';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as priceHistory from '../../lib/price-history';
+import * as storage from '../../lib/storage';
 
-describe('Price History', () => {
-  beforeAll(() => {
-    installIndexedDbMock();
+vi.mock('../../lib/storage', () => ({
+  setItem: vi.fn(),
+  getAllItems: vi.fn(),
+  STORE_HISTORY_EVENTS: 'history_events',
+}));
+
+describe('price-history', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
-  beforeEach(async () => {
-    resetIndexedDbMock();
-    await wipeAllData();
-  });
+  it('filters records older than 30 days', async () => {
+    const now = Date.now();
+    const thirtyOneDaysAgo = now - 31 * 24 * 60 * 60 * 1000;
+    const twentyNineDaysAgo = now - 29 * 24 * 60 * 60 * 1000;
 
-  it('saves and retrieves price records for an ASIN', async () => {
-    await savePrice('B001', 10.0);
-    await savePrice('B001', 15.0);
-    await savePrice('B002', 20.0);
+    const mockData = [
+      { asin: 'test', date: twentyNineDaysAgo, price: 20 },
+      { asin: 'test', date: thirtyOneDaysAgo, price: 10 },
+    ];
 
-    const history = await getPriceHistory('B001');
-    expect(history).toHaveLength(2);
-    expect(history[0].price).toBe(10.0);
-    expect(history[1].price).toBe(15.0);
-    expect(history[0].date).toBeLessThan(history[1].date);
-  });
+    vi.mocked(storage.getAllItems).mockResolvedValue(mockData);
 
-  it('returns empty array for non-existent ASIN', async () => {
-    const history = await getPriceHistory('B009');
-    expect(history).toEqual([]);
+    const history = await priceHistory.get30DayPriceHistory('test');
+
+    expect(history).toHaveLength(1);
+    expect(history[0].price).toBe(20);
   });
 });

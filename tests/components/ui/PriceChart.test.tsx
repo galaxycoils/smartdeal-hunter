@@ -1,20 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { PriceChart } from '../../../components/ui/PriceChart';
 
 describe('PriceChart', () => {
-  it('renders correctly with data', () => {
+  it('renders correctly with data and trend indicator', () => {
     const data = [
-      { date: 1778091411794, price: 10 },
-      { date: 1778091411795, price: 15 },
+      { date: 1778091411794, price: 100 },
+      { date: 1778091411795, price: 110 },
     ];
-    const { container } = render(<PriceChart data={data} />);
-    expect(container).toBeDefined();
+    render(<PriceChart data={data} />);
+
+    expect(screen.getByText('30-Day Price Trend')).toBeDefined();
+    expect(screen.getByText('+10.0%')).toBeDefined();
   });
 
   it('renders "No price history" when data is empty', () => {
-    const { getByText } = render(<PriceChart data={[]} />);
-    expect(getByText('No price history available.')).toBeDefined();
+    render(<PriceChart data={[]} />);
+    expect(screen.getByText('No price history available.')).toBeDefined();
   });
 });

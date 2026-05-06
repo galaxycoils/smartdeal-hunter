@@ -1,46 +1,26 @@
-# Phase 2 — Batch 10
+# Phase 2 Batch 10: Advanced Charting
 
-Goal: Complete Phase 2. Implement Performance & Regression Testing (P2.10) and Store Release & Monitoring (P2.11).
+## Objectives
 
-## Tasks
+- Enhance `lib/price-history.ts` to support 30-day filtering.
+- Upgrade `components/ui/PriceChart.tsx` to provide interactive 30-day charting using Recharts.
+- Add textual "Price Trend" analysis (e.g., "30-day trend: +5%").
 
-### P2.10 Performance & Regression Testing
+## Implementation Plan
 
-**Deps:** P2.5, P2.7
-**Owner:** QA
-**Files (new):** `tests/performance/benchmark.test.ts`, `tests/performance/stress.test.ts`
-**Files (modified):** `playwright.config.ts`, `vitest.config.ts`
+1. **lib/price-history.ts**:
+   - Add `get30DayPriceHistory(asin: string)` function.
+   - Implement date calculation logic (Date.now() - 30 days).
+2. **components/ui/PriceChart.tsx**:
+   - Update chart configuration for improved readability.
+   - Use 'recharts' features for interactivity (activeDot, tooltip, custom formatting).
+   - Add trend indicator component based on historical data calculations.
+3. **Tests**:
+   - Update `tests/components/ui/PriceChart.test.tsx` to verify interactive chart elements.
+   - Add `tests/lib/price-history.test.ts` (if not exists) to test 30-day filter logic.
 
-**Acceptance Criteria:**
+## Verification Gate
 
-- [ ] Add ML benchmark tests for Genome scoring engine ensuring < 500ms execution time on average product page (50-product benchmark).
-- [ ] Add stress tests for Analysis Cache Manager and Deep Check API (simulated/mocked responses).
-- [ ] Lighthouse integration for Options page performance validation.
-- [ ] Ensure all existing 208 tests pass.
-- [ ] Maintain 90/90/90/90 coverage.
-
-### P2.11 Store Release & Monitoring
-
-**Deps:** P2.10
-**Owner:** Tech Lead
-**Files (modified):** `wxt.config.ts`, `README.md`, `docs/store-listing.md`
-
-**Acceptance Criteria:**
-
-- [ ] Update `wxt.config.ts` with error tracking configuration (basic global error listener, no external tracking service needed to maintain privacy, just robust console/local logging).
-- [ ] Produce production build (`pnpm build`).
-- [ ] Verify zipped extension is < 2.5MB.
-- [ ] Update `docs/store-listing.md` with final release notes and screenshots requirement checklist.
-- [ ] Update `README.md` to reflect Phase 2 completion.
-
-## Dependency / Execution Order
-
-P2.10 -> P2.11
-
-## Final Verification
-
-- `pnpm test:run`
-- `pnpm tsc --noEmit`
-- `pnpm test:coverage`
-- `pnpm build`
-- `pnpm zip`
+- All tests pass, including the new 30-day filter logic.
+- Price trend indicator correctly calculates trend percentage.
+- Interactive chart elements (tooltip, active dot) are visible.
