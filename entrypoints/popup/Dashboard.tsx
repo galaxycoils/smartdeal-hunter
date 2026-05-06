@@ -82,7 +82,12 @@ const ScoreTile: React.FC<{ label: string; value: number; description: string }>
         <span className="text-2xl font-bold tabular-nums">{value}</span>
         <span className="text-xs text-muted-foreground">/100</span>
       </div>
-      <Progress value={value} className="mt-2" indicatorClassName={indicatorClass} />
+      <Progress
+        value={value}
+        className="mt-2"
+        indicatorClassName={indicatorClass}
+        aria-label={`${label} score ${value} out of 100`}
+      />
       <p className="mt-1.5 text-[11px] leading-tight text-muted-foreground">{description}</p>
     </div>
   );
@@ -210,7 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ genome }) => {
                   {(dim.weight * 100).toFixed(0)}%
                 </span>
               </div>
-              <Progress value={dim.weight * 100} />
+              <Progress value={dim.weight * 100} aria-label={`${dim.name} weight`} />
             </div>
           ))}
         </CardContent>

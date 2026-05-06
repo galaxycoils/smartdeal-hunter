@@ -18,7 +18,11 @@ const TOTAL_STEPS = 3;
 const StepDots: React.FC<{ current: number }> = ({ current }) => (
   <div
     className="flex items-center justify-center gap-1.5"
+    role="progressbar"
     aria-label={`Step ${current + 1} of ${TOTAL_STEPS}`}
+    aria-valuenow={current + 1}
+    aria-valuemin={1}
+    aria-valuemax={TOTAL_STEPS}
   >
     {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
       <span
