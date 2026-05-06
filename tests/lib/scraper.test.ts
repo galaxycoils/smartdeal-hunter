@@ -36,6 +36,10 @@ describe('Amazon Scraper', () => {
       expect(extractAsinFromUrl('https://www.amazon.com/b?node=123')).toBeNull();
     });
 
+    it('returns null on invalid URL format', () => {
+      expect(extractAsinFromUrl('not-a-valid-url')).toBeNull();
+    });
+
     it('returns null for incomplete ASINs', () => {
       expect(extractAsinFromUrl('https://www.amazon.com/dp/B0CHX1W')).toBeNull(); // 7 chars
     });
@@ -81,6 +85,22 @@ describe('Amazon Scraper', () => {
       const html = `<script type="application/ld+json">{ "@type": "Product", "name": "Broken </script>"`;
       const doc = createDocument(html);
       expect(extractFromJsonLd(doc)).toBeNull();
+    });
+
+    it('extracts partial fields when some are missing from JSON-LD', () => {
+      const html =
+        '<script type="application/ld+json">' +
+        '{ "@type": "Product", "name": "Partial", "aggregateRating": {}, "offers": {} }' +
+        '</script>';
+      const doc = createDocument(html);
+      const data = extractFromJsonLd(doc);
+      expect(data).toMatchObject({
+        title: 'Partial',
+        rating: null,
+        reviewCount: null,
+        price: null,
+        currency: 'USD',
+      });
     });
 
     it('returns null if only BreadcrumbList is present', () => {
@@ -133,6 +153,24 @@ describe('Amazon Scraper', () => {
       const doc = createDocument(html);
       expect(extractFromDom(doc)?.price).toBeNull();
     });
+
+    it('returns null price if priceEl text contains no digits', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">Free</span></div>';
+      const doc = createDocument(html);
+      expect(extractFromDom(doc)?.price).toBeNull();
+    });
+
+    it('returns null rating if acrPopover title contains no digits', () => {
+      const html = '<div id="acrPopover" title="No rating here"></div>';
+      const doc = createDocument(html);
+      expect(extractFromDom(doc)?.rating).toBeNull();
+    });
+
+    it('returns null reviewCount if acrCustomerReviewText contains no digits', () => {
+      const html = '<span id="acrCustomerReviewText">No reviews yet</span>';
+      const doc = createDocument(html);
+      expect(extractFromDom(doc)?.reviewCount).toBeNull();
+    });
   });
 
   describe('scrapeProduct', () => {
@@ -158,6 +196,38 @@ describe('Amazon Scraper', () => {
       const data = scrapeProduct('https://amazon.co.jp/dp/B000000001', doc, () => 1000);
       expect(data?.currency).toBe('JPY');
       expect(data?.price).toBe(4299);
+    });
+
+    it('detects currency from CA URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">$42.99</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.ca/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('CAD');
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('detects currency from FR URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">42,99 €</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.fr/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('EUR');
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('detects currency from IT URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">42,99 €</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.it/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('EUR');
+      expect(data?.price).toBe(42.99);
+    });
+
+    it('detects currency from ES URL', () => {
+      const html = '<div class="a-price"><span class="a-offscreen">42,99 €</span></div>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.es/dp/B000000001', doc, () => 1000);
+      expect(data?.currency).toBe('EUR');
+      expect(data?.price).toBe(42.99);
     });
 
     it('falls back to DOM when JSON-LD is missing', () => {
@@ -201,6 +271,22 @@ describe('Amazon Scraper', () => {
     it('returns null if no ASIN is found in URL', () => {
       const doc = createDocument('<span id="productTitle">Title</span>');
       expect(scrapeProduct('https://amazon.com/cart', doc)).toBeNull();
+    });
+
+    it('uses JSON-LD as primary source when available', () => {
+      const html =
+        '<script type="application/ld+json">' +
+        '{ "@type": "Product", "name": "LD Title", "offers": { "price": "15.00" } }' +
+        '</script>' +
+        '<span id="productTitle"> DOM Title </span>';
+      const doc = createDocument(html);
+      const data = scrapeProduct('https://amazon.com/dp/B000000001', doc, () => 1000);
+
+      expect(data).toMatchObject({
+        title: 'LD Title',
+        price: 15.0,
+        source: 'jsonld',
+      });
     });
   });
 
