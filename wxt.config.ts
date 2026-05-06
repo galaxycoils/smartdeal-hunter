@@ -6,6 +6,12 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   vite: () => ({
     plugins: [tailwindcss()],
+    // NOTE: manualChunks deliberately NOT configured. WXT disables
+    // `output.codeSplitting` for content scripts because MV3 content
+    // scripts must be self-contained single files (no chunk fetching
+    // across the page-isolated world without `web_accessible_resources`
+    // + chrome.runtime.getURL plumbing). See conductor/plan-phase4.md
+    // WU-5 alternative-path notes for full rationale.
   }),
   manifest: {
     name: 'SmartDeal Hunter',
