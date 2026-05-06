@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { Loader2 } from 'lucide-react';
 import { Onboarding } from './Onboarding';
 import { Dashboard } from './Dashboard';
-import { loadGenome, onGenomeChange } from '../../lib/genome';
-import { deriveKey } from '../../lib/crypto';
-import type { Genome } from '../../lib/types';
+import { Toaster } from '@/components/ui/Sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import { loadGenome, onGenomeChange } from '@/lib/genome';
+import { deriveKey } from '@/lib/crypto';
+import type { Genome } from '@/lib/types';
 
 function App() {
   const [genome, setGenome] = useState<Genome | null>(null);
@@ -59,18 +62,35 @@ function App() {
     setGenome(g);
   };
 
-  if (loading) return <div className="p-4">Initializing...</div>;
-  if (error) return <div className="p-4 text-red-600">{error}</div>;
-
-  if (!genome?.isOnboarded && cryptoKey) {
-    return <Onboarding cryptoKey={cryptoKey} onComplete={handleOnboardingComplete} />;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+        <span className="text-xs">Initializing secure storage…</span>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="p-3">
+        <Alert variant="destructive">
+          <AlertTitle>Initialization failed</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
-  if (genome) {
-    return <Dashboard genome={genome} />;
-  }
-
-  return null;
+  return (
+    <>
+      {!genome?.isOnboarded && cryptoKey ? (
+        <Onboarding cryptoKey={cryptoKey} onComplete={handleOnboardingComplete} />
+      ) : genome ? (
+        <Dashboard genome={genome} />
+      ) : null}
+      <Toaster />
+    </>
+  );
 }
 
 export default App;

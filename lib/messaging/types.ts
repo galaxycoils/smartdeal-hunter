@@ -13,6 +13,17 @@ export interface ScrapeRequest {
   tabId?: number;
 }
 
+export type ScrapeResponse =
+  | {
+      success: true;
+      payload: {
+        asin: string;
+        trueValue: number;
+        personalFit: number;
+      };
+    }
+  | { success: false; error: string };
+
 export interface RenderPanelMessage {
   type: 'RENDER_PANEL';
   payload: {

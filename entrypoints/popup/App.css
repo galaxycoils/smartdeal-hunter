@@ -1,43 +1,5 @@
 #root {
-  width: 320px;
-  min-height: 380px;
-  padding: 1rem;
+  width: 380px;
+  min-height: 420px;
   box-sizing: border-box;
-}
-
-.popup-bootstrap h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
-}
-
-.subtitle {
-  margin: 0 0 1rem;
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.status {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1rem;
-  font-size: 0.85rem;
-}
-
-.status li {
-  padding: 0.25rem 0;
-}
-
-.hint {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .subtitle {
-    color: #9ca3af;
-  }
-  .hint {
-    color: #6b7280;
-  }
 }

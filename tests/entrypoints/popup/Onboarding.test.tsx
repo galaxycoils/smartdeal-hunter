@@ -42,17 +42,17 @@ describe('Onboarding Component', () => {
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={vi.fn()} />);
 
     expect(screen.getByText(/Welcome to SmartDeal Hunter/i)).toBeInTheDocument();
-    expect(screen.getByText(/Privacy Note/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Started/i })).toBeInTheDocument();
+    expect(screen.getByText(/Your data stays local/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Get started/i })).toBeInTheDocument();
   });
 
   it('navigates to Step 2: Preferences', async () => {
     const user = userEvent.setup();
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: /Get Started/i }));
+    await user.click(screen.getByRole('button', { name: /Get started/i }));
 
-    expect(screen.getByText(/Your Preferences/i)).toBeInTheDocument();
+    expect(screen.getByText(/Your preferences/i)).toBeInTheDocument();
     // Check for 8 sliders
     GENOME_DIMENSIONS.forEach((dim) => {
       const label = dim.replace(/_/g, ' ');
@@ -65,7 +65,7 @@ describe('Onboarding Component', () => {
     const user = userEvent.setup();
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: /Get Started/i }));
+    await user.click(screen.getByRole('button', { name: /Get started/i }));
 
     const firstSlider = screen.getAllByRole('slider')[0];
     fireEvent.change(firstSlider, { target: { value: '0.8' } });
@@ -77,10 +77,10 @@ describe('Onboarding Component', () => {
     const user = userEvent.setup();
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: /Get Started/i }));
+    await user.click(screen.getByRole('button', { name: /Get started/i }));
     await user.click(screen.getByRole('button', { name: /Next/i }));
 
-    expect(screen.getByText(/All Set!/i)).toBeInTheDocument();
+    expect(screen.getByText(/All set/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Finish/i })).toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe('Onboarding Component', () => {
     const onComplete = vi.fn();
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={onComplete} />);
 
-    await user.click(screen.getByRole('button', { name: /Get Started/i }));
+    await user.click(screen.getByRole('button', { name: /Get started/i }));
 
     const firstSlider = screen.getAllByRole('slider')[0];
     fireEvent.change(firstSlider, { target: { value: '0.9' } });
@@ -110,14 +110,14 @@ describe('Onboarding Component', () => {
     const user = userEvent.setup();
     render(<Onboarding cryptoKey={mockCryptoKey} onComplete={vi.fn()} />);
 
-    const startButton = screen.getByRole('button', { name: /Get Started/i });
+    const startButton = screen.getByRole('button', { name: /Get started/i });
     startButton.focus();
     expect(document.activeElement).toBe(startButton);
 
     await user.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(screen.getByText(/Your Preferences/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your preferences/i)).toBeInTheDocument();
     });
   });
 });

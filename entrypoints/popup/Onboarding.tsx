@@ -1,14 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { GENOME_DIMENSIONS, type Genome, type GenomeDimension } from '../../lib/types';
-import { defaultGenome, saveGenome } from '../../lib/genome';
-import { Slider } from '../../components/ui/Slider';
-import { Button } from '../../components/ui/Button';
-import { Card, CardContent, CardHeader } from '../../components/ui/Card';
+import { ArrowLeft, ArrowRight, CheckCircle2, Lock, Sparkles } from 'lucide-react';
+import { GENOME_DIMENSIONS, type Genome, type GenomeDimension } from '@/lib/types';
+import { defaultGenome, saveGenome } from '@/lib/genome';
+import { Slider } from '@/components/ui/Slider';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import { cn } from '@/lib/utils';
 
 interface OnboardingProps {
   cryptoKey: CryptoKey;
   onComplete: () => void;
 }
+
+const TOTAL_STEPS = 3;
+
+const StepDots: React.FC<{ current: number }> = ({ current }) => (
+  <div
+    className="flex items-center justify-center gap-1.5"
+    aria-label={`Step ${current + 1} of ${TOTAL_STEPS}`}
+  >
+    {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+      <span
+        key={i}
+        className={cn(
+          'h-1.5 rounded-full transition-all',
+          i === current ? 'w-6 bg-primary' : 'w-1.5 bg-muted',
+        )}
+      />
+    ))}
+  </div>
+);
 
 export const Onboarding: React.FC<OnboardingProps> = ({ cryptoKey, onComplete }) => {
   const [step, setStep] = useState(0);
@@ -48,26 +70,32 @@ export const Onboarding: React.FC<OnboardingProps> = ({ cryptoKey, onComplete })
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto w-full" role="main">
+    <div className="flex flex-col gap-3 p-3" role="main">
+      <StepDots current={step} />
+
       {step === 0 && (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-bold text-gray-900">Welcome to SmartDeal Hunter</h2>
+            <div className="mb-1 flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Sparkles className="size-5" />
+            </div>
+            <CardTitle>Welcome to SmartDeal Hunter</CardTitle>
+            <CardDescription>
+              A privacy-first product scout. Helps you find better deals using preferences scored
+              entirely on your device.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Your privacy-first product scout. We help you find the best deals based on your
-              personal preferences, all on-device.
-            </p>
-            <div className="bg-blue-50 p-3 rounded-md border border-blue-100" role="note">
-              <h3 className="text-sm font-semibold text-blue-800">Privacy Note</h3>
-              <p className="text-xs text-blue-700">
-                Your data never leaves this device. All analysis and preference storage is encrypted
-                locally using your master key.
-              </p>
-            </div>
-            <Button onClick={() => setStep(1)} className="w-full">
-              Get Started
+            <Alert variant="info">
+              <Lock />
+              <AlertTitle>Your data stays local</AlertTitle>
+              <AlertDescription>
+                Analysis and preference storage are encrypted on your device. Nothing leaves your
+                machine.
+              </AlertDescription>
+            </Alert>
+            <Button onClick={() => setStep(1)} className="w-full" size="lg">
+              Get started <ArrowRight />
             </Button>
           </CardContent>
         </Card>
@@ -76,13 +104,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ cryptoKey, onComplete })
       {step === 1 && (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-bold text-gray-900">Your Preferences</h2>
-            <p className="text-sm text-gray-500">
-              Adjust these to help us find what matters to you.
-            </p>
+            <CardTitle>Your preferences</CardTitle>
+            <CardDescription>Drag to set what matters when scoring deals.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="max-h-[350px] overflow-y-auto pr-2 space-y-5 custom-scrollbar">
+          <CardContent className="space-y-4">
+            <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
               {GENOME_DIMENSIONS.map((dim) => (
                 <Slider
                   key={dim}
@@ -93,12 +119,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ cryptoKey, onComplete })
                 />
               ))}
             </div>
-            <div className="flex space-x-3 pt-4">
+            <div className="flex gap-2 pt-2">
               <Button variant="outline" onClick={() => setStep(0)} className="flex-1">
-                Back
+                <ArrowLeft /> Back
               </Button>
               <Button onClick={() => setStep(2)} className="flex-1">
-                Next
+                Next <ArrowRight />
               </Button>
             </div>
           </CardContent>
@@ -108,22 +134,25 @@ export const Onboarding: React.FC<OnboardingProps> = ({ cryptoKey, onComplete })
       {step === 2 && (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-bold text-gray-900">All Set!</h2>
+            <div className="mb-1 flex size-9 items-center justify-center rounded-md bg-success/15 text-success">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <CardTitle>All set</CardTitle>
+            <CardDescription>
+              Your shopping genome is initialised. You can fine-tune any time from the dashboard.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              We&apos;ve initialized your shopping genome. You can always adjust these settings
-              later in the dashboard.
-            </p>
-            <div className="bg-green-50 p-3 rounded-md border border-green-100">
-              <p className="text-xs text-green-700">Ready to start scouting for smarter deals?</p>
-            </div>
-            <div className="flex space-x-3 pt-2">
+            <Alert variant="success">
+              <CheckCircle2 />
+              <AlertDescription>Ready to start scouting for smarter deals?</AlertDescription>
+            </Alert>
+            <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                Back
+                <ArrowLeft /> Back
               </Button>
               <Button onClick={handleFinish} className="flex-1">
-                Finish
+                Finish <ArrowRight />
               </Button>
             </div>
           </CardContent>

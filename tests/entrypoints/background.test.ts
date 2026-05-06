@@ -271,7 +271,14 @@ describe('Background Service Worker', () => {
           kind: 'analyze',
         }),
       );
-      expect(sendResponse).toHaveBeenCalledWith({ success: true });
+      expect(sendResponse).toHaveBeenCalledWith({
+        success: true,
+        payload: expect.objectContaining({
+          asin: productData.asin,
+          trueValue: expect.any(Number),
+          personalFit: expect.any(Number),
+        }),
+      });
     });
 
     it('queries active tab when tabId omitted', async () => {
@@ -288,7 +295,14 @@ describe('Background Service Worker', () => {
         active: true,
         currentWindow: true,
       });
-      expect(sendResponse).toHaveBeenCalledWith({ success: true });
+      expect(sendResponse).toHaveBeenCalledWith({
+        success: true,
+        payload: expect.objectContaining({
+          asin: expect.any(String),
+          trueValue: expect.any(Number),
+          personalFit: expect.any(Number),
+        }),
+      });
     });
 
     it('errors when no active tab is found', async () => {

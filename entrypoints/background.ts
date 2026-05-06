@@ -66,8 +66,8 @@ export default defineBackground(() => {
       const msg = message as ScrapeRequest;
       // Handle the orchestration async
       handleScrapeRequest(msg.tabId)
-        .then((success) => {
-          sendResponse({ success });
+        .then((payload) => {
+          sendResponse({ success: true, payload });
         })
         .catch((err) => {
           console.error('[smartdeal-hunter] Orchestration failed', err);
@@ -100,7 +100,9 @@ export default defineBackground(() => {
     return true;
   }
 
-  async function handleScrapeRequest(tabId?: number): Promise<boolean> {
+  async function handleScrapeRequest(
+    tabId?: number,
+  ): Promise<{ asin: string; trueValue: number; personalFit: number }> {
     let targetTabId = tabId;
     if (!targetTabId) {
       const tabs = await browser.tabs.query({ active: true, currentWindow: true });
@@ -172,6 +174,10 @@ export default defineBackground(() => {
       kind: 'analyze',
     });
 
-    return true;
+    return {
+      asin: productData.asin,
+      trueValue: scoreRes.payload.trueValue,
+      personalFit: scoreRes.payload.personalFit,
+    };
   }
 });
