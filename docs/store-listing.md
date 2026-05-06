@@ -10,14 +10,13 @@ into the developer dashboard.
 - **Version**: 0.0.1
 - **Category**: Shopping
 - **Languages**: English (United States)
-- **Visibility**: Unlisted (dev channel) → Public after Phase 2 review
+- **Visibility**: Public (Phase 2 Release)
 
 ## Short description (≤ 132 chars)
 
-> Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit
-> scoring. No tracking.
+> Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit scoring. No tracking. No affiliate injection.
 
-(99 chars — within limit.)
+(122 chars — within limit.)
 
 ## Detailed description
 

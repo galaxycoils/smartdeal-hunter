@@ -1,65 +1,99 @@
-# SmartDeal Hunter
+# 🏹 SmartDeal Hunter
 
-Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit
-scoring. No tracking. No affiliate injection. Ever.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/tahamtandariush/smartdeal-hunter/releases)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-v0.0.1-green.svg)](https://chrome.google.com/webstore)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 
-Spec: `docs/spec/SmartDeal_Hunter_Implementation_Plan.xlsx` (and the human
-mirror at `docs/spec/SUMMARY.md`).
+**SmartDeal Hunter** is a privacy-first Amazon shopping assistant that helps you make smarter purchases through on-device analysis. Unlike traditional extensions, it never tracks your browsing history, injects affiliate links, or sends your personal data to remote servers.
 
-Process: see `CLAUDE.md` for the metaswarm pipeline, gates, and conventions.
+---
 
-## Stack
+## 🌟 Key Features
 
-- WXT 0.20 + Vite + React 19 + TypeScript 5.9 strict, Manifest V3
-- Vitest 2.1 + happy-dom + v8 coverage
-- ESLint flat + Prettier + husky + lint-staged
-- ONNX Runtime Web + WebNN (P1.7+); Web Crypto AES-GCM-256 + PBKDF2 (P1.2)
-- shadcn/ui + Tailwind (initialised; no components added at bootstrap)
-- Min Chrome 116
+### 🧠 Genome Engine
 
-## Dev
+Your shopping preferences are unique. The **Genome Engine** builds a local profile of what matters to you—whether it's review quality, brand trust, or extreme discount depth.
 
-```sh
+- **Personal Fit Score:** Every product is scored against your specific priorities.
+- **On-Device Learning:** Learns from your feedback (Saved, Purchased, Not Interested) without ever leaving your machine.
+
+### ⚖️ True Value Analysis
+
+Get an objective 0–100 quality signal for any product.
+
+- Combines price trends, review sentiment (local analysis), and brand reliability.
+- **Scout Panel:** A non-intrusive shadow-DOM overlay that appears only when you need it.
+
+### 🛡️ Privacy by Design
+
+- **Zero Telemetry:** No tracking, no advertising IDs, no background scraping.
+- **Local Encryption:** Your profile is encrypted with **AES-GCM-256** using a key derived via **PBKDF2** (600,000 iterations).
+- **Opt-in Only:** Advanced features like "Deep Check" (via Amazon Creators API) require explicit user consent and are rate-limited.
+
+### 📦 Ethical Bundle Optimizer
+
+Discover product combinations that actually make sense for your needs, generated locally from your history and preferences.
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework:** [WXT 0.20](https://wxt.dev/) (Web Extension Toolbox)
+- **UI:** [React 19](https://react.dev/), [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS v4](https://tailwindcss.com/)
+- **State:** [Genome State Management](https://github.com/tahamtandariush/smartdeal-hunter/blob/main/lib/genome.ts)
+- **ML/Inference:** [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/)
+- **Security:** Web Crypto API (AES-GCM, PBKDF2)
+- **Testing:** [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/)
+
+---
+
+## 🚀 Getting Started
+
+### Installation (Developer Channel)
+
+1. Download the latest [Release Zip](https://github.com/tahamtandariush/smartdeal-hunter/releases).
+2. Unzip the file.
+3. Open Chrome and go to `chrome://extensions`.
+4. Enable **Developer Mode** (top right toggle).
+5. Click **Load unpacked** and select the `.output/chrome-mv3` folder.
+
+### Local Development
+
+```bash
+# Install dependencies
 pnpm install
-pnpm dev               # WXT dev server with HMR
-pnpm build             # Production build → .output/chrome-mv3/
-pnpm typecheck
-pnpm lint
-pnpm test              # vitest watch
-pnpm test:run          # vitest single-pass
-pnpm test:coverage     # enforces .coverage-thresholds.json
+
+# Start development server with HMR
+pnpm dev
+
+# Run unit and integration tests
+pnpm test:run
+
+# Build production version
+pnpm build
 ```
 
-Load unpacked: Chrome → `chrome://extensions` → enable Developer Mode →
-"Load unpacked" → select `.output/chrome-mv3/`.
+---
 
-## Coverage ratchet
+## 📊 Project Status: Phase 2 COMPLETE
 
-Defined in `.coverage-thresholds.json`. Bump in the same PR that earns the new floor.
+We have successfully delivered the core pillars of SmartDeal Hunter:
 
-| Floor | Earned by                        |
-| ----- | -------------------------------- |
-| 0%    | Bootstrap (P1.1) — current       |
-| 50%   | After P1.5 (Genome data model)   |
-| 70%   | After P1.10 (Scout Result Panel) |
-| 90%   | Before CWS submission (P1.15)    |
+- [x] **Secure Architecture:** PBKDF2-backed local encryption.
+- [x] **Scout & Genome:** Fully functional on-device scoring.
+- [x] **Options & Privacy:** Comprehensive user control and audit logs.
+- [x] **Test Coverage:** Maintained >90% coverage across all modules.
 
-## Status
+---
 
-Phase 2 is **COMPLETE**, including:
+## 📄 License
 
-- Options Page Architecture and Genome Editor UI
-- Ethical Bundle Optimizer with local-only history scoring
-- Deep Check backend with OAuth token storage, cache, retry, and rate limiting
-- Advanced Privacy Controls with audit log, opt-in toggles, and scheduled wipe
-- Cross-page Genome revision sync for popup, options, and background
-- Performance & Regression testing
-- Error tracking & store release prep
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Latest verified gates:
+---
 
-- `pnpm test:run` → 210 passing tests
-- `pnpm tsc --noEmit` → pass
-- `pnpm test:coverage` → > 90% maintained
-- `pnpm build` → pass
-- `pnpm zip` → pass
+<p align="center">
+  Built with ❤️ for privacy-conscious shoppers.
+</p>

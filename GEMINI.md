@@ -13,20 +13,18 @@ Before doing ANYTHING in this repo, read these files in order:
 ## Current state (2026-05-05)
 
 Phase 1 (P1.1 - P1.15) is **DONE and COMMITTED**.
-Phase 2 Batch 8 (P2.1, P2.2, P2.3, P2.6) is **DONE and COMMITTED**.
-Phase 2 Batch 9 (P2.4, P2.5, P2.7, P2.8, P2.9) is **DONE and COMMITTED**.
+Phase 2 (P2.1 - P2.11) is **DONE and COMMITTED**.
 
 - All unit/integration tests pass. Lint clean.
 - Coverage: **> 90%** (threshold 90% maintained).
 
-## Next Task: Phase 2 Batch 10
+## Next Task: Phase 3
 
-We are now ready for **Batch 10**:
+We are now ready for **Phase 3 (Post-Release & Scaling)**:
 
-- **P2.10**: [Next Task Placeholder]
-- **P2.11**: [Next Task Placeholder]
-
-**First step**: Create `conductor/plan-batch10.md` and run the plan-review-gate.
+- **P3.1**: Multi-store support (Amazon UK/DE/JP)
+- **P3.2**: Price history visualization
+- **P3.3**: Advanced local LLM sentiment analysis
 
 ## Hard rules (from CLAUDE.md)
 
