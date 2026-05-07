@@ -10,6 +10,8 @@ const { mockBrowser } = vi.hoisted(() => ({
     tabs: {
       query: vi.fn(),
       sendMessage: vi.fn(),
+      update: vi.fn().mockResolvedValue(undefined),
+      create: vi.fn(),
     },
   },
 }));
@@ -57,12 +59,26 @@ vi.mock('../../lib/feedback', () => ({
   calculateFeedbackUpdate: vi.fn().mockImplementation((g) => g),
 }));
 
+vi.mock('../../lib/price-alerts', () => ({
+  enrollAlert: vi.fn().mockResolvedValue(undefined),
+  disenrollAlert: vi.fn().mockResolvedValue(undefined),
+  listEnrolledAlerts: vi.fn().mockResolvedValue([]),
+  checkAllAlerts: vi.fn().mockResolvedValue(undefined),
+  ALARM_NAME: 'sdh:price-check',
+}));
+
 import background from '../../entrypoints/background';
 import { loadGenome, saveGenome } from '../../lib/genome';
 import { getCachedProduct, cacheProduct } from '../../lib/cache';
 import { ensureOffscreen } from '../../lib/offscreen-manager';
 import { calculateFeedbackUpdate } from '../../lib/feedback';
 import { setItem, STORE_HISTORY_EVENTS, wipeAllData } from '../../lib/storage';
+import {
+  enrollAlert,
+  disenrollAlert,
+  listEnrolledAlerts,
+  checkAllAlerts,
+} from '../../lib/price-alerts';
 
 type Listener = (msg: unknown, sender: unknown, sendResponse: (r: unknown) => void) => unknown;
 
@@ -91,13 +107,18 @@ const productData = {
 describe('Background Service Worker', () => {
   let listener: Listener;
   let alarmListener: ((alarm: chrome.alarms.Alarm) => Promise<void>) | undefined;
+  let notificationClickListener: ((notificationId: string) => Promise<void>) | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
     genomeChangeCallbacks.length = 0;
     alarmListener = undefined;
+    notificationClickListener = undefined;
     vi.spyOn(chrome.alarms.onAlarm, 'addListener').mockImplementation((callback) => {
       alarmListener = callback as (alarm: chrome.alarms.Alarm) => Promise<void>;
+    });
+    vi.spyOn(chrome.notifications.onClicked, 'addListener').mockImplementation((callback) => {
+      notificationClickListener = callback as (id: string) => Promise<void>;
     });
     background.main();
     listener = mockBrowser.runtime.onMessage.addListener.mock.calls[0][0] as Listener;
@@ -148,6 +169,99 @@ describe('Background Service Worker', () => {
 
       expect(wipeAllData).not.toHaveBeenCalled();
       expect(createSpy).toHaveBeenCalledWith('sdh:scheduled-wipe', { when: expect.any(Number) });
+    });
+  });
+
+  describe('price-check alarm', () => {
+    it('runs checkAllAlerts when sdh:price-check fires', async () => {
+      await alarmListener?.({ name: 'sdh:price-check' } as chrome.alarms.Alarm);
+      expect(checkAllAlerts).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not run checkAllAlerts for unrelated alarms', async () => {
+      await alarmListener?.({ name: 'other' } as chrome.alarms.Alarm);
+      expect(checkAllAlerts).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('alert message handlers', () => {
+    it('handles ENROLL_ALERT', async () => {
+      const sendResponse = vi.fn();
+      listener({ type: 'ENROLL_ALERT', payload: { asin: 'B07A' } }, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(enrollAlert).toHaveBeenCalledWith('B07A', expect.anything());
+      expect(sendResponse).toHaveBeenCalledWith({ success: true });
+    });
+
+    it('handles DISENROLL_ALERT', async () => {
+      const sendResponse = vi.fn();
+      listener({ type: 'DISENROLL_ALERT', payload: { asin: 'B07A' } }, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(disenrollAlert).toHaveBeenCalledWith('B07A', expect.anything());
+      expect(sendResponse).toHaveBeenCalledWith({ success: true });
+    });
+
+    it('handles LIST_ENROLLED_ALERTS', async () => {
+      vi.mocked(listEnrolledAlerts).mockResolvedValue(['B07A', 'B07B']);
+      const sendResponse = vi.fn();
+      listener({ type: 'LIST_ENROLLED_ALERTS' }, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(sendResponse).toHaveBeenCalledWith({
+        type: 'ENROLLED_ALERTS',
+        payload: { asins: ['B07A', 'B07B'] },
+      });
+    });
+  });
+
+  describe('notifications.onClicked', () => {
+    it('focuses existing tab when cached product url matches', async () => {
+      vi.mocked(getCachedProduct).mockResolvedValue({
+        ...productData,
+        url: 'https://www.amazon.com/dp/B07A',
+      } as never);
+      mockBrowser.tabs.query.mockResolvedValue([{ id: 42, windowId: 7 }]);
+      const winUpdate = vi.spyOn(chrome.windows, 'update').mockResolvedValue({} as never);
+      const notifClear = vi.spyOn(chrome.notifications, 'clear').mockResolvedValue(true);
+
+      await notificationClickListener?.('sdh:price-alert:B07A');
+
+      expect(mockBrowser.tabs.update).toHaveBeenCalledWith(42, { active: true });
+      expect(winUpdate).toHaveBeenCalledWith(7, { focused: true });
+      expect(notifClear).toHaveBeenCalledWith('sdh:price-alert:B07A');
+    });
+
+    it('does NOT open new tab when no matching tab exists (invariant #3)', async () => {
+      vi.mocked(getCachedProduct).mockResolvedValue({
+        ...productData,
+        url: 'https://www.amazon.com/dp/B07A',
+      } as never);
+      mockBrowser.tabs.query.mockResolvedValue([]);
+      const notifClear = vi.spyOn(chrome.notifications, 'clear').mockResolvedValue(true);
+
+      await notificationClickListener?.('sdh:price-alert:B07A');
+
+      expect(mockBrowser.tabs.create).not.toHaveBeenCalled();
+      expect(mockBrowser.tabs.update).not.toHaveBeenCalled();
+      expect(notifClear).toHaveBeenCalled();
+    });
+
+    it('no-ops on cache miss', async () => {
+      vi.mocked(getCachedProduct).mockResolvedValue(undefined);
+      const notifClear = vi.spyOn(chrome.notifications, 'clear').mockResolvedValue(true);
+
+      await notificationClickListener?.('sdh:price-alert:B07A');
+
+      expect(mockBrowser.tabs.create).not.toHaveBeenCalled();
+      expect(mockBrowser.tabs.update).not.toHaveBeenCalled();
+      expect(notifClear).toHaveBeenCalled();
+    });
+
+    it('ignores notifications without sdh:price-alert: prefix', async () => {
+      await notificationClickListener?.('other-id');
+      expect(mockBrowser.tabs.update).not.toHaveBeenCalled();
     });
   });
 

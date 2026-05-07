@@ -4,13 +4,18 @@ import { PrivacyTab } from '../../../components/ui/PrivacyTab';
 import * as storage from '../../../lib/storage';
 import * as genome from '../../../lib/genome';
 
+const sendMessageMock = vi.fn();
 vi.mock('wxt/browser', () => ({
   browser: {
     runtime: {
-      sendMessage: vi.fn().mockResolvedValue(undefined),
+      sendMessage: (...args: unknown[]) => sendMessageMock(...args),
     },
   },
 }));
+
+declare const __chromeTestHarness: {
+  setNotificationPermissionLevel: (level: 'granted' | 'denied') => void;
+};
 
 vi.mock('../../../lib/storage', () => ({
   wipeAllData: vi.fn().mockResolvedValue(undefined),
@@ -31,6 +36,9 @@ describe('PrivacyTab', () => {
     vi.stubGlobal('alert', vi.fn());
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    sendMessageMock.mockReset();
+    sendMessageMock.mockResolvedValue({ type: 'ENROLLED_ALERTS', payload: { asins: [] } });
+    __chromeTestHarness.setNotificationPermissionLevel('granted');
   });
 
   it('loads toggles defaulted to false and persists changes', async () => {
@@ -162,6 +170,66 @@ describe('PrivacyTab', () => {
 
     await waitFor(() => {
       expect(alert).toHaveBeenCalledWith('Failed to wipe data.');
+    });
+  });
+
+  describe('Price Alerts section', () => {
+    it('shows empty state when no alerts enrolled', async () => {
+      render(<PrivacyTab />);
+      expect(await screen.findByText('Price alerts')).toBeInTheDocument();
+      expect(screen.getByText(/no alerts enrolled/i)).toBeInTheDocument();
+    });
+
+    it('lists enrolled ASINs with un-enroll buttons', async () => {
+      sendMessageMock.mockImplementation((msg: { type: string }) => {
+        if (msg.type === 'LIST_ENROLLED_ALERTS') {
+          return Promise.resolve({
+            type: 'ENROLLED_ALERTS',
+            payload: { asins: ['B07AAA', 'B07BBB'] },
+          });
+        }
+        return Promise.resolve({ success: true });
+      });
+
+      render(<PrivacyTab />);
+      expect(await screen.findByText('B07AAA')).toBeInTheDocument();
+      expect(screen.getByText('B07BBB')).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /un-?enroll/i }).length).toBe(2);
+    });
+
+    it('dispatches DISENROLL_ALERT when un-enroll clicked', async () => {
+      sendMessageMock.mockImplementation((msg: { type: string }) => {
+        if (msg.type === 'LIST_ENROLLED_ALERTS') {
+          return Promise.resolve({
+            type: 'ENROLLED_ALERTS',
+            payload: { asins: ['B07AAA'] },
+          });
+        }
+        return Promise.resolve({ success: true });
+      });
+
+      render(<PrivacyTab />);
+      const btn = await screen.findByRole('button', { name: /un-?enroll/i });
+      fireEvent.click(btn);
+
+      await waitFor(() =>
+        expect(sendMessageMock).toHaveBeenCalledWith({
+          type: 'DISENROLL_ALERT',
+          payload: { asin: 'B07AAA' },
+        }),
+      );
+    });
+
+    it('shows OS permission denied banner', async () => {
+      __chromeTestHarness.setNotificationPermissionLevel('denied');
+      render(<PrivacyTab />);
+      expect(await screen.findByText(/notifications: blocked by os/i)).toBeInTheDocument();
+    });
+
+    it('shows OS permission granted pill', async () => {
+      __chromeTestHarness.setNotificationPermissionLevel('granted');
+      render(<PrivacyTab />);
+      expect(await screen.findByText(/notifications: allowed/i)).toBeInTheDocument();
     });
   });
 });

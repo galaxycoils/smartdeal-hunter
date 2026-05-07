@@ -134,8 +134,16 @@ const mockBrowser = {
 
 vi.stubGlobal('browser', mockBrowser);
 vi.stubGlobal('chrome', mockBrowser);
+
+// fakeBrowser (from wxt/testing) overrides chrome/browser AFTER our stub above.
+// Patch missing API surface on the fakeBrowser global at runtime per test.
+let notificationPermissionLevel: 'granted' | 'denied' = 'granted';
+
 vi.stubGlobal('__chromeTestHarness', {
   getAlarmListeners: () => Array.from(alarmListeners),
+  setNotificationPermissionLevel: (level: 'granted' | 'denied') => {
+    notificationPermissionLevel = level;
+  },
 });
 
 beforeEach(() => {
@@ -145,7 +153,37 @@ beforeEach(() => {
   storageListeners.clear();
   alarmListeners.clear();
   scheduledAlarms.clear();
+  notificationPermissionLevel = 'granted';
   vi.clearAllMocks();
+
+  const fb = (
+    globalThis as unknown as {
+      chrome?: {
+        alarms?: { resetState?: () => void };
+        notifications?: { resetState?: () => void };
+        tabs?: { resetState?: () => void };
+        windows?: { resetState?: () => void };
+      };
+    }
+  ).chrome;
+  fb?.alarms?.resetState?.();
+  fb?.notifications?.resetState?.();
+  fb?.tabs?.resetState?.();
+  fb?.windows?.resetState?.();
+
+  // Patch fakeBrowser.notifications with `getPermissionLevel` (not provided by fakeBrowser).
+  const g = globalThis as unknown as {
+    chrome?: { notifications?: Record<string, unknown> };
+    browser?: { notifications?: Record<string, unknown> };
+  };
+  const notif = g.chrome?.notifications;
+  if (notif && typeof notif.getPermissionLevel !== 'function') {
+    notif.getPermissionLevel = vi.fn(async () => notificationPermissionLevel);
+  }
+  const bnotif = g.browser?.notifications;
+  if (bnotif && typeof bnotif.getPermissionLevel !== 'function') {
+    bnotif.getPermissionLevel = vi.fn(async () => notificationPermissionLevel);
+  }
 });
 
 afterEach(() => {

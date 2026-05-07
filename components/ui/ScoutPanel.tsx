@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { browser } from 'wxt/browser';
 import { Card, CardContent, CardHeader } from './Card';
 import { Button } from './Button';
-import { LineChart, Loader2 } from 'lucide-react';
+import { Bell, BellOff, LineChart, Loader2 } from 'lucide-react';
 import { PriceChart } from './PriceChart';
 import { get30DayPriceHistory, PriceRecord } from '../../lib/price-history';
+import type { ListEnrolledAlertsResponse } from '../../lib/messaging/types';
 
 export interface ScoutPanelProps {
   asin: string;
@@ -23,6 +25,45 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   const [showHistory, setShowHistory] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyData, setHistoryData] = useState<PriceRecord[]>([]);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [notificationsAllowed, setNotificationsAllowed] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = (await browser.runtime.sendMessage({
+          type: 'LIST_ENROLLED_ALERTS',
+        })) as ListEnrolledAlertsResponse | undefined;
+        if (cancelled) return;
+        if (res?.type === 'ENROLLED_ALERTS') {
+          setIsEnrolled(res.payload.asins.includes(_asin));
+        }
+      } catch {
+        /* ignore */
+      }
+
+      try {
+        const level = await chrome.notifications.getPermissionLevel();
+        if (!cancelled) setNotificationsAllowed(level === 'granted');
+      } catch {
+        /* keep default */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [_asin]);
+
+  const handleWatchToggle = async () => {
+    const type = isEnrolled ? 'DISENROLL_ALERT' : 'ENROLL_ALERT';
+    setIsEnrolled(!isEnrolled);
+    try {
+      await browser.runtime.sendMessage({ type, payload: { asin: _asin } });
+    } catch {
+      setIsEnrolled(isEnrolled); // revert on failure
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -81,6 +122,17 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
             <span className="text-3xl font-extrabold text-green-600">{personalFit}</span>
           </div>
         </div>
+
+        <Button
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2 mt-2"
+          onClick={handleWatchToggle}
+          disabled={!notificationsAllowed}
+          aria-pressed={isEnrolled}
+        >
+          {isEnrolled ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+          {isEnrolled ? 'Stop watching' : 'Watch'}
+        </Button>
 
         <Button
           variant="outline"

@@ -1,6 +1,6 @@
 # Privacy Policy — SmartDeal Hunter
 
-**Last updated**: May 6, 2026
+**Last updated**: May 7, 2026
 
 SmartDeal Hunter is a privacy-first Amazon shopping assistant. We believe that
 your shopping habits, preferences, and data belong to you. This policy
@@ -68,8 +68,16 @@ We only ask for the permissions necessary to function:
 - `activeTab`: To read the product page you are currently viewing.
 - `scripting`: To show the score panel on the Amazon page.
 - `storage`: To save your settings and Genome locally.
-- `alarms`: To handle scheduled data wipes.
+- `alarms`: To handle scheduled data wipes and (since v0.2.0) the periodic
+  on-device price-alert re-check (~30 min interval, evaluates only
+  locally collected price history; never scrapes or makes remote calls).
 - `offscreen`: To run on-device ML inference.
+- `notifications` (since v0.2.0): To show OS-level price-drop alerts when
+  you have explicitly enrolled an ASIN via the "Watch this ASIN" toggle.
+  Clicking a notification focuses an already-open tab matching the
+  cached product URL; we never open new tabs. Notifications can be
+  disabled by un-enrolling each ASIN, by denying notification permission
+  at the browser/OS level, or by wiping all data.
 
 ## 7. Contact
 

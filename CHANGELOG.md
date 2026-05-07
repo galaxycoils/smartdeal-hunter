@@ -5,6 +5,48 @@ All notable changes to SmartDeal Hunter are documented in this file.
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-05-07
+
+Phase 5.1 — Local Price Alerts.
+
+### Added
+
+- **Price alerts** — opt-in "Watch this ASIN" toggle in the Scout panel.
+  Alarm-driven re-check (`sdh:price-check`, period ≥ 30 min) compares the
+  cached price against the locally collected 30-day low and fires a
+  `chrome.notifications` system notification when the price beats the low.
+  All evaluation runs on-device against IndexedDB; **no remote calls.**
+- **Enrolled-alert management** in Options → Privacy:
+  list of enrolled ASINs with per-row un-enroll button, OS-permission
+  status pill, and "Notifications: blocked by OS" banner when the user
+  has denied browser notification permission.
+- **`notifications` permission** added to the manifest. Notifications fire
+  only after explicit user opt-in via the Watch toggle.
+- **Audit log** extended with `price-alert-enroll`, `price-alert-disenroll`,
+  and `price-alert-fired` event kinds (gated by the existing
+  `optInAuditLog` toggle).
+- **Notification click handler** focuses an existing tab matching the
+  cached product URL. **Never opens a new tab** (privacy invariant: no
+  auto-navigation). Click clears the notification regardless.
+
+### Changed
+
+- **IndexedDB schema bumped from v4 → v5** with a new `price_alerts`
+  encrypted store. Existing v4 data is preserved on upgrade. Downgrading
+  from v0.2.0 to a v0.1.x build will refuse to open the database
+  (`DBVersionMismatchError`); users wanting to downgrade must wipe data
+  via Options → Privacy → Wipe All Data.
+- `lib/storage.ts` exports new `getAllEncryptedItems<T>(storeName, key)`
+  helper for bulk-decrypted reads from any encrypted store.
+
+### Privacy
+
+- All four privacy invariants preserved: zero remote, encrypted-at-rest
+  (AES-GCM-256), explicit-trigger only (alarm reads only locally
+  collected price history; never scrapes), bundle ≤ 2.5 MB, Chrome ≥ 116,
+  service-worker-stateless (alarm handler re-derives bootstrap key on
+  every wake), IDB forward-only.
+
 ## [0.1.0] — 2026-05-06
 
 First public release. Closes spec Phase 1 + Phase 2 + post-spec Phase 3

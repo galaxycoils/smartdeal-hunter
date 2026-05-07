@@ -1,10 +1,21 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { ScoutPanel } from '../../../components/ui/ScoutPanel';
 import { get30DayPriceHistory } from '../../../lib/price-history';
 
 vi.mock('../../../lib/price-history', () => ({
   get30DayPriceHistory: vi.fn(),
+}));
+
+declare const __chromeTestHarness: {
+  setNotificationPermissionLevel: (level: 'granted' | 'denied') => void;
+};
+
+const sendMessageMock = vi.fn();
+vi.mock('wxt/browser', () => ({
+  browser: {
+    runtime: { sendMessage: (...args: unknown[]) => sendMessageMock(...args) },
+  },
 }));
 
 // mock ResponsiveContainer to avoid ResizeObserver error in tests
@@ -19,6 +30,11 @@ vi.mock('recharts', async () => {
 });
 
 describe('ScoutPanel', () => {
+  beforeEach(() => {
+    sendMessageMock.mockReset();
+    sendMessageMock.mockResolvedValue({ type: 'ENROLLED_ALERTS', payload: { asins: [] } });
+    __chromeTestHarness.setNotificationPermissionLevel('granted');
+  });
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -70,6 +86,72 @@ describe('ScoutPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Purchased' }));
     expect(onFeedback).toHaveBeenCalledWith('purchased');
+  });
+
+  describe('Watch toggle (price alert)', () => {
+    it('renders Watch button and queries enrollment on mount', async () => {
+      render(<ScoutPanel {...defaultProps} />);
+      await waitFor(() =>
+        expect(sendMessageMock).toHaveBeenCalledWith({ type: 'LIST_ENROLLED_ALERTS' }),
+      );
+      expect(screen.getByRole('button', { name: /watch/i })).toBeTruthy();
+    });
+
+    it('shows "Stop watching" when ASIN already enrolled', async () => {
+      sendMessageMock.mockResolvedValue({
+        type: 'ENROLLED_ALERTS',
+        payload: { asins: [defaultProps.asin] },
+      });
+      render(<ScoutPanel {...defaultProps} />);
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /stop watching/i })).toBeTruthy();
+      });
+    });
+
+    it('dispatches ENROLL_ALERT on click when not enrolled', async () => {
+      render(<ScoutPanel {...defaultProps} />);
+      await waitFor(() => screen.getByRole('button', { name: /watch/i }));
+      sendMessageMock.mockClear();
+      sendMessageMock.mockResolvedValue({ success: true });
+
+      fireEvent.click(screen.getByRole('button', { name: /watch/i }));
+
+      await waitFor(() =>
+        expect(sendMessageMock).toHaveBeenCalledWith({
+          type: 'ENROLL_ALERT',
+          payload: { asin: defaultProps.asin },
+        }),
+      );
+    });
+
+    it('dispatches DISENROLL_ALERT on click when enrolled', async () => {
+      sendMessageMock.mockResolvedValue({
+        type: 'ENROLLED_ALERTS',
+        payload: { asins: [defaultProps.asin] },
+      });
+      render(<ScoutPanel {...defaultProps} />);
+      await waitFor(() => screen.getByRole('button', { name: /stop watching/i }));
+      sendMessageMock.mockClear();
+      sendMessageMock.mockResolvedValue({ success: true });
+
+      fireEvent.click(screen.getByRole('button', { name: /stop watching/i }));
+
+      await waitFor(() =>
+        expect(sendMessageMock).toHaveBeenCalledWith({
+          type: 'DISENROLL_ALERT',
+          payload: { asin: defaultProps.asin },
+        }),
+      );
+    });
+
+    it('disables toggle when notification permission is denied', async () => {
+      __chromeTestHarness.setNotificationPermissionLevel('denied');
+      render(<ScoutPanel {...defaultProps} />);
+      await waitFor(() => {
+        const btn = screen.getByRole('button', { name: /watch/i }) as HTMLButtonElement;
+        expect(btn.disabled).toBe(true);
+      });
+    });
   });
 
   it('renders View Price History toggle and handles click', async () => {

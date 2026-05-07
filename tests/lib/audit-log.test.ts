@@ -39,6 +39,20 @@ describe('Audit Log', () => {
     await expect(getAuditLogEntries()).resolves.toHaveLength(1);
   });
 
+  it.each([
+    ['price-alert-enroll', 'asin=B07ABC enrolled'],
+    ['price-alert-disenroll', 'asin=B07ABC disenrolled'],
+    ['price-alert-fired', 'asin=B07ABC fired @ 19.99'],
+  ] as const)('appends price alert kind %s', async (kind, summary) => {
+    await chrome.storage.local.set({ optInAuditLog: true });
+
+    await appendAuditLog({ kind, summary });
+
+    await expect(getAuditLogEntries()).resolves.toEqual([
+      expect.objectContaining({ kind, summary, ts: expect.any(Number) }),
+    ]);
+  });
+
   it('evicts older entries once the ring buffer exceeds 500 items', async () => {
     await chrome.storage.local.set({ optInAuditLog: true });
 

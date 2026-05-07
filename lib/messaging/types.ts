@@ -68,6 +68,25 @@ export interface DataWipedMessage {
   type: 'DATA_WIPED';
 }
 
+export interface EnrollAlertRequest {
+  type: 'ENROLL_ALERT';
+  payload: { asin: string };
+}
+
+export interface DisenrollAlertRequest {
+  type: 'DISENROLL_ALERT';
+  payload: { asin: string };
+}
+
+export interface ListEnrolledAlertsRequest {
+  type: 'LIST_ENROLLED_ALERTS';
+}
+
+export interface ListEnrolledAlertsResponse {
+  type: 'ENROLLED_ALERTS';
+  payload: { asins: string[] };
+}
+
 export type ContentMessage =
   | ExecuteScraperRequest
   | ProductDataResponse
@@ -82,4 +101,10 @@ export type OffscreenMessage =
   | ScoreResultResponse
   | ComputeScoresError
   | DataWipedMessage;
-export type PopupMessage = ScrapeRequest | DataWipedMessage;
+export type PopupMessage =
+  | ScrapeRequest
+  | DataWipedMessage
+  | EnrollAlertRequest
+  | DisenrollAlertRequest
+  | ListEnrolledAlertsRequest
+  | ListEnrolledAlertsResponse;

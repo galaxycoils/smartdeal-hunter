@@ -6,6 +6,7 @@ import { loadGenome } from '../../lib/genome';
 import { deriveKey } from '../../lib/crypto';
 import { wipeAllData } from '../../lib/storage';
 import { getAuditLogEntries, type AuditLogEntry } from '../../lib/audit-log';
+import type { ListEnrolledAlertsResponse } from '../../lib/messaging/types';
 
 type PrivacySettings = {
   optInDeepCheck: boolean;
@@ -24,6 +25,42 @@ export const PrivacyTab: React.FC = () => {
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([]);
   const [wipeSuccess, setWipeSuccess] = useState(false);
   const [scheduleSeconds, setScheduleSeconds] = useState('5');
+  const [enrolledAsins, setEnrolledAsins] = useState<string[]>([]);
+  const [notifPermission, setNotifPermission] = useState<'granted' | 'denied'>('granted');
+
+  const refreshEnrollments = async () => {
+    try {
+      const res = (await browser.runtime.sendMessage({
+        type: 'LIST_ENROLLED_ALERTS',
+      })) as ListEnrolledAlertsResponse | undefined;
+      if (res?.type === 'ENROLLED_ALERTS') {
+        setEnrolledAsins(res.payload.asins);
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleUnenroll = async (asin: string) => {
+    setEnrolledAsins((prev) => prev.filter((a) => a !== asin));
+    try {
+      await browser.runtime.sendMessage({ type: 'DISENROLL_ALERT', payload: { asin } });
+    } catch {
+      void refreshEnrollments();
+    }
+  };
+
+  useEffect(() => {
+    void refreshEnrollments();
+    void (async () => {
+      try {
+        const level = await chrome.notifications.getPermissionLevel();
+        setNotifPermission(level === 'denied' ? 'denied' : 'granted');
+      } catch {
+        /* keep default */
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -73,6 +110,7 @@ export const PrivacyTab: React.FC = () => {
       await wipeAllData();
       await browser.runtime.sendMessage({ type: 'DATA_WIPED' });
       setAuditEntries([]);
+      setEnrolledAsins([]);
       setWipeSuccess(true);
       setTimeout(() => setWipeSuccess(false), 5_000);
     } catch (error) {
@@ -148,6 +186,37 @@ export const PrivacyTab: React.FC = () => {
                   <div key={`${entry.ts}-${entry.summary}`} className="flex justify-between gap-4">
                     <span>{entry.summary}</span>
                     <span className="text-gray-500">{entry.kind}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-medium">Price alerts</h3>
+            <p
+              className={`text-sm ${
+                notifPermission === 'denied' ? 'text-red-700' : 'text-green-700'
+              }`}
+            >
+              {notifPermission === 'denied'
+                ? 'Notifications: blocked by OS'
+                : 'Notifications: allowed'}
+            </p>
+            <div className="rounded border border-gray-200 p-3 text-sm space-y-2">
+              {enrolledAsins.length === 0 ? (
+                <p className="text-gray-500">No alerts enrolled yet.</p>
+              ) : (
+                enrolledAsins.map((asin) => (
+                  <div key={asin} className="flex justify-between items-center gap-4">
+                    <span className="font-mono">{asin}</span>
+                    <Button
+                      variant="outline"
+                      className="text-xs py-1 px-2"
+                      onClick={() => void handleUnenroll(asin)}
+                    >
+                      Un-enroll
+                    </Button>
                   </div>
                 ))
               )}

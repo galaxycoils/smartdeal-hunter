@@ -5,12 +5,14 @@ import {
   deleteItem,
   setEncryptedItem,
   getEncryptedItem,
+  getAllEncryptedItems,
   wipeAllData,
   getAllItems,
   STORE_PRODUCT_CACHE,
   STORE_ANALYSIS_CACHE,
   STORE_HISTORY_EVENTS,
   STORE_OAUTH,
+  STORE_PRICE_ALERTS,
   DBVersionMismatchError,
 } from '../../lib/storage';
 import { deriveKey } from '../../lib/crypto';
@@ -110,6 +112,53 @@ describe('Storage Layer', () => {
     expect(stores?.has(STORE_ANALYSIS_CACHE)).toBe(true);
     expect(stores?.has(STORE_HISTORY_EVENTS)).toBe(true);
     expect(stores?.has(STORE_OAUTH)).toBe(true);
+    expect(stores?.has(STORE_PRICE_ALERTS)).toBe(true);
+  });
+
+  it('upgrades a v4 database adding STORE_PRICE_ALERTS without losing data', async () => {
+    seedDatabase(DB_NAME, 4, {
+      [STORE_GENOME]: { g1: 'persisted-genome' },
+      [STORE_PRODUCT_CACHE]: {},
+      [STORE_ANALYSIS_CACHE]: {},
+      [STORE_HISTORY_EVENTS]: { h1: { ts: 1, asin: 'A', kind: 'analyze' } },
+      [STORE_OAUTH]: {},
+    });
+
+    await expect(getItem(STORE_GENOME, 'g1')).resolves.toBe('persisted-genome');
+
+    const stores = getDatabaseStores(DB_NAME);
+    expect(stores?.has(STORE_PRICE_ALERTS)).toBe(true);
+    expect(stores?.get(STORE_PRICE_ALERTS)?.size).toBe(0);
+    expect(stores?.get(STORE_HISTORY_EVENTS)?.size).toBe(1);
+  });
+
+  it('stores and retrieves encrypted items in STORE_PRICE_ALERTS', async () => {
+    const value = { asin: 'B07ABC1234', enrolledAt: 123, lastNotifiedPrice: null };
+    await setEncryptedItem(STORE_PRICE_ALERTS, 'B07ABC1234', value, testKey);
+    await expect(getEncryptedItem(STORE_PRICE_ALERTS, 'B07ABC1234', testKey)).resolves.toEqual(
+      value,
+    );
+  });
+
+  it('getAllEncryptedItems returns all decrypted records in a store', async () => {
+    const a = { asin: 'A1', enrolledAt: 1 };
+    const b = { asin: 'B2', enrolledAt: 2 };
+    await setEncryptedItem(STORE_PRICE_ALERTS, 'A1', a, testKey);
+    await setEncryptedItem(STORE_PRICE_ALERTS, 'B2', b, testKey);
+
+    const results = await getAllEncryptedItems(STORE_PRICE_ALERTS, testKey);
+    expect(results).toEqual(expect.arrayContaining([a, b]));
+    expect(results).toHaveLength(2);
+  });
+
+  it('getAllEncryptedItems returns empty array on empty store', async () => {
+    await expect(getAllEncryptedItems(STORE_PRICE_ALERTS, testKey)).resolves.toEqual([]);
+  });
+
+  it('wipeAllData clears STORE_PRICE_ALERTS', async () => {
+    await setEncryptedItem(STORE_PRICE_ALERTS, 'A1', { asin: 'A1' }, testKey);
+    await wipeAllData();
+    await expect(getEncryptedItem(STORE_PRICE_ALERTS, 'A1', testKey)).resolves.toBeUndefined();
   });
 
   it('upgrades a v2 database and preserves existing data while adding new stores', async () => {
@@ -131,13 +180,14 @@ describe('Storage Layer', () => {
   it('throws DBVersionMismatchError when opening a future-version database', async () => {
     seedDatabase(
       DB_NAME,
-      5,
+      6,
       {
         [STORE_GENOME]: { g1: 'future-genome' },
         [STORE_PRODUCT_CACHE]: {},
         [STORE_ANALYSIS_CACHE]: {},
         [STORE_HISTORY_EVENTS]: {},
         [STORE_OAUTH]: {},
+        [STORE_PRICE_ALERTS]: {},
       },
       { failOnLowerVersion: false },
     );
@@ -148,13 +198,14 @@ describe('Storage Layer', () => {
   it('preserves future-version data after version mismatch rejection', async () => {
     seedDatabase(
       DB_NAME,
-      5,
+      6,
       {
         [STORE_GENOME]: { g1: 'future-genome' },
         [STORE_PRODUCT_CACHE]: {},
         [STORE_ANALYSIS_CACHE]: {},
         [STORE_HISTORY_EVENTS]: {},
         [STORE_OAUTH]: { tokens: { accessToken: 'future-token' } },
+        [STORE_PRICE_ALERTS]: {},
       },
       { failOnLowerVersion: false },
     );

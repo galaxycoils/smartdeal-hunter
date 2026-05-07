@@ -9,12 +9,13 @@
 import { encryptWithKey, decryptWithKey } from './crypto';
 
 const DB_NAME = 'SmartDealHunterDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_GENOME = 'genome';
 export const STORE_PRODUCT_CACHE = 'product_cache';
 export const STORE_ANALYSIS_CACHE = 'analysis_cache';
 export const STORE_HISTORY_EVENTS = 'history_events';
 export const STORE_OAUTH = 'oauth';
+export const STORE_PRICE_ALERTS = 'price_alerts';
 
 export class DBVersionMismatchError extends Error {
   constructor(actualVersion: number, expectedVersion: number) {
@@ -52,6 +53,9 @@ async function getDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_OAUTH)) {
         db.createObjectStore(STORE_OAUTH);
+      }
+      if (!db.objectStoreNames.contains(STORE_PRICE_ALERTS)) {
+        db.createObjectStore(STORE_PRICE_ALERTS);
       }
     };
 
@@ -154,6 +158,22 @@ export async function getEncryptedItem<T>(
 
   const jsonString = await decryptWithKey(encrypted, cryptoKey);
   return JSON.parse(jsonString) as T;
+}
+
+/**
+ * Retrieves and decrypts all items from a store.
+ */
+export async function getAllEncryptedItems<T>(
+  storeName: string,
+  cryptoKey: CryptoKey,
+): Promise<T[]> {
+  const all = await getAllItems<Uint8Array>(storeName);
+  const out: T[] = [];
+  for (const enc of all) {
+    const json = await decryptWithKey(enc, cryptoKey);
+    out.push(JSON.parse(json) as T);
+  }
+  return out;
 }
 
 /**

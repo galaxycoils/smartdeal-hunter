@@ -1,4 +1,4 @@
-# Chrome Web Store Submission Checklist — v0.1.0
+# Chrome Web Store Submission Checklist — v0.2.0
 
 This file holds every CWS dashboard field with the exact value to
 paste, plus a checkbox list of pre-submission asset work.
@@ -72,8 +72,9 @@ Contact: tahamtandariush@gmail.com
 activeTab    — Required to read the current Amazon product page when the user clicks Quick Scout. Used only on user action.
 scripting    — Required to inject the SmartDeal Scout panel UI into the active Amazon tab when the user requests an analysis.
 storage      — Required to persist the user's Genome (preference vector) and UI preferences across sessions, on-device only.
-alarms       — Required to fire the user-scheduled data wipe at the user's chosen future time.
+alarms       — Required to fire the user-scheduled data wipe and the periodic price-alert re-check (~30 min, on-device only; reads locally collected price history).
 offscreen    — Required to run heavy on-device ML inference (ONNX Runtime Web) inside an MV3 offscreen document; the service worker cannot host this directly.
+notifications — Required to show OS-level price-drop alerts. Fires only after the user explicitly enrolls an ASIN via the "Watch this ASIN" toggle in the Scout panel. No remote calls; notification body is built from on-device data only.
 ```
 
 ### Host-permission justifications (one per host_permissions entry)

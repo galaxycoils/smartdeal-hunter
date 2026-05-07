@@ -7,6 +7,8 @@ import type {
   ScoreResultResponse,
   RenderPanelMessage,
   UpdateGenomeRequest,
+  EnrollAlertRequest,
+  DisenrollAlertRequest,
 } from '../lib/messaging/types';
 import { loadGenome, onGenomeChange, saveGenome } from '../lib/genome';
 import { deriveKey } from '../lib/crypto';
@@ -14,22 +16,60 @@ import { cacheProduct, getCachedProduct } from '../lib/cache';
 import { toAttributeVector } from '../lib/scoring';
 import { calculateFeedbackUpdate } from '../lib/feedback';
 import { setItem, STORE_HISTORY_EVENTS, wipeAllData } from '../lib/storage';
+import {
+  enrollAlert,
+  disenrollAlert,
+  listEnrolledAlerts,
+  checkAllAlerts,
+  ALARM_NAME as PRICE_CHECK_ALARM,
+} from '../lib/price-alerts';
+
+const NOTIFICATION_PREFIX = 'sdh:price-alert:';
 
 export default defineBackground(() => {
   console.log('[smartdeal-hunter] background ready', { id: browser.runtime.id });
 
   chrome.alarms.onAlarm.addListener(async (alarm: chrome.alarms.Alarm) => {
-    if (alarm.name !== 'sdh:scheduled-wipe') {
+    if (alarm.name === 'sdh:scheduled-wipe') {
+      const stored = await chrome.storage.local.get('sdh:in-flight');
+      if (typeof stored['sdh:in-flight'] === 'number') {
+        await chrome.alarms.create('sdh:scheduled-wipe', { when: Date.now() + 30_000 });
+        return;
+      }
+      await wipeAllData();
       return;
     }
 
-    const stored = await chrome.storage.local.get('sdh:in-flight');
-    if (typeof stored['sdh:in-flight'] === 'number') {
-      await chrome.alarms.create('sdh:scheduled-wipe', { when: Date.now() + 30_000 });
+    if (alarm.name === PRICE_CHECK_ALARM) {
+      // SW-stateless: re-derive bootstrap key on every wake; never cache module-side.
+      const salt = new Uint8Array(16);
+      const key = await deriveKey('bootstrap-session-password', salt);
+      await checkAllAlerts(key);
       return;
     }
+  });
 
-    await wipeAllData();
+  chrome.notifications.onClicked.addListener(async (notificationId: string) => {
+    if (!notificationId.startsWith(NOTIFICATION_PREFIX)) return;
+    const asin = notificationId.slice(NOTIFICATION_PREFIX.length);
+
+    const salt = new Uint8Array(16);
+    const key = await deriveKey('bootstrap-session-password', salt);
+    const cached = await getCachedProduct(asin, key);
+
+    if (cached && cached.url) {
+      const tabs = await browser.tabs.query({ url: cached.url });
+      const match = tabs[0];
+      if (match && match.id != null) {
+        await browser.tabs.update(match.id, { active: true });
+        if (match.windowId != null) {
+          await chrome.windows.update(match.windowId, { focused: true });
+        }
+      }
+      // If no matching tab: do NOT open a new one (invariant #3).
+    }
+
+    await chrome.notifications.clear(notificationId);
   });
 
   void (async () => {
@@ -62,6 +102,20 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (
+      message.type === 'ENROLL_ALERT' ||
+      message.type === 'DISENROLL_ALERT' ||
+      message.type === 'LIST_ENROLLED_ALERTS'
+    ) {
+      handleAlertMessage(message)
+        .then((res) => sendResponse(res))
+        .catch((err) => {
+          console.error('[smartdeal-hunter] Alert handler failed', err);
+          sendResponse({ success: false, error: err.message });
+        });
+      return true;
+    }
+
     if (message.type === 'SCRAPE_REQUEST') {
       const msg = message as ScrapeRequest;
       // Handle the orchestration async
@@ -76,6 +130,24 @@ export default defineBackground(() => {
       return true; // Keep channel open
     }
   });
+
+  async function handleAlertMessage(
+    message: EnrollAlertRequest | DisenrollAlertRequest | { type: 'LIST_ENROLLED_ALERTS' },
+  ): Promise<unknown> {
+    const salt = new Uint8Array(16);
+    const key = await deriveKey('bootstrap-session-password', salt);
+
+    if (message.type === 'ENROLL_ALERT') {
+      await enrollAlert(message.payload.asin, key);
+      return { success: true };
+    }
+    if (message.type === 'DISENROLL_ALERT') {
+      await disenrollAlert(message.payload.asin, key);
+      return { success: true };
+    }
+    const asins = await listEnrolledAlerts(key);
+    return { type: 'ENROLLED_ALERTS', payload: { asins } };
+  }
 
   async function handleUpdateGenome(
     asin: string,

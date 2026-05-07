@@ -2,7 +2,7 @@
   "name": "smartdeal-hunter",
   "description": "Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit scoring.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -50,6 +50,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/chrome": "^0.1.42",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/recharts": "^2.0.1",
