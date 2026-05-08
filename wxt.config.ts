@@ -18,7 +18,7 @@ export default defineConfig({
     short_name: 'SmartDeal',
     description:
       'Privacy-first Amazon shopping assistant. On-device True Value + Personal Fit scoring. No tracking.',
-    version: '0.2.0',
+    version: '0.2.1',
     author: { email: 'tahamtandariush@gmail.com' },
     homepage_url: 'https://github.com/tahamtandariush/smartdeal-hunter',
     permissions: ['activeTab', 'scripting', 'storage', 'alarms', 'offscreen', 'notifications'],

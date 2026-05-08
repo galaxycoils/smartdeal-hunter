@@ -41,6 +41,16 @@ retrieves live product data from the Amazon Creators API.
 - **Revocation**: You can revoke access at any time from the extension's
   Privacy tab or your Amazon account settings.
 
+### Review authenticity (added in v0.2.1)
+
+When you Quick Scout a product page, the extension reads the review block
+already loaded in your browser tab and computes an authenticity score
+locally using six heuristics. The review text is processed in memory and
+discarded as soon as the score is rendered — it is never persisted to
+storage, never written to the audit log, and never transmitted off the
+device. If you have opted in to the audit log, only the product ASIN,
+the number of reviews scored, and the integer score are recorded.
+
 ## 4. Gemini Nano and On-Device ML
 
 Scoring and sentiment analysis are performed **entirely on your device**.

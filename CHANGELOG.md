@@ -5,6 +5,27 @@ All notable changes to SmartDeal Hunter are documented in this file.
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-05-07
+
+### Added
+
+- On-device review authenticity score in the Quick Scout panel. Six pure
+  heuristics (bigram-Jaccard uniqueness, rating distribution, temporal
+  cluster, body-length variance, verified-purchase ratio, helpful-votes
+  average) combine into a 0–100 score with an optional "Why?" disclosure
+  listing up to three suspicious-review reasons. No remote calls. Review
+  text never leaves the device, never persisted to IndexedDB, never
+  written to the audit log.
+
+### Notes
+
+- Audit log gains a new optional kind `review-authenticity-evaluated`
+  (gated by the existing opt-in audit-log toggle). Summary contains
+  ASIN, sample count, and score only — no review text.
+- v0.2.x ships with US-locale review fixtures only; defensive selectors
+  cover all eight Amazon locales but only the US fixture gates CI.
+  Remaining locales are tracked as follow-up.
+
 ## [0.2.0] — 2026-05-07
 
 Phase 5.1 — Local Price Alerts.

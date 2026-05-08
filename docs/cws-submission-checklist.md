@@ -113,6 +113,12 @@ The extension does not require an account, does not collect telemetry,
 and does not function on any non-Amazon domain. The Deep Check OAuth
 flow is the only optional remote integration and is gated behind
 explicit user action.
+- Review authenticity (v0.2.1+): in-page DOM read of already-displayed
+  reviews; no remote calls; no persistence of review text. Audit-log
+  entries (when opted in) contain ASIN + count + score only.
+- Review-block selector fixture refresh policy: ad-hoc, performed when
+  the US synthetic fixture snapshot test fails in CI (indicates Amazon
+  DOM A/B test has shifted selectors).
 ```
 
 ---

@@ -13,6 +13,7 @@ Four work items per `docs/STATE_HANDOFF.md` Future section + memory `project_v0_
 | P5.2 | Cross-locale Price Compare        | none                                                     | v0.2.0               |
 | P5.3 | Multi-retailer (Target / Walmart) | new host permissions for `*.target.com`, `*.walmart.com` | v0.3.0               |
 | P5.4 | CWS review monitoring             | none (passive ops)                                       | tracks v0.1.0–v0.3.0 |
+| P5.5 | Review Authenticity (on-device)   | none                                                     | v0.2.x               |
 
 P5.1 + P5.2 ship together as v0.2.0. If CWS rejects `notifications`, P5.2 ships v0.2.0 alone and P5.1 defers to v0.2.1 — separate work-unit commits keep them revertible independently. P5.3 ships separately as v0.3.0 because new host permissions force CWS re-review; do not bundle.
 
@@ -94,6 +95,32 @@ Each entry below is intentionally brief — implementation depth (file lists, fu
 - CWS reviewer notes: per-retailer fixture refresh cadence; on-failure path when all 3 extraction strategies miss.
 
 **Verification gates**: per-scraper unit ≥ 90% coverage; E2E for Target + Walmart; CI check that built `manifest.json` host_permissions count matches content_scripts.matches count.
+
+### P5.5 — Review Authenticity (on-device)
+
+**Goal**: when the user is on a scouted Amazon product page, surface a single 0-100 "Reviews authenticity" score in `ScoutPanel` derived from on-device heuristics over the review block already present in the DOM. Optional Deep Check modal exposes the top suspicious-signal reviews. Zero remote calls; no review text leaves the device.
+
+**Permissions delta**: none. Existing `activeTab` + content-script `matches` cover the review DOM that the user already loaded.
+
+**Key code paths to read first**: `entrypoints/content.ts`, `lib/scraper.ts` (existing `aggregateRating` → `reviewCount` chain at lines 29 and 95), `components/ui/ScoutPanel.tsx`, `components/ui/DeepCheckTab.tsx`, `lib/sentiment.ts` (existing on-device pattern), `lib/messaging/types.ts`, `tests/setup.ts`, `wxt.config.ts`.
+
+**Out of scope for P5.5** (separate decision items, NOT bundled silently):
+
+- ONNX BERT classifier. Heuristic-only for v0.2.x. Future ML upgrade gets its own ADR + plan + offscreen-document integration (`CLAUDE.md` "Heavy ML in Offscreen Document only"). Bundling a 20 MB model in this slot violates invariant #4 (≤ 2.5 MB).
+- Persisting authenticity scores. Session-only cache; no IDB schema bump; invariant #7 untouched.
+- New `chrome.notifications` flows. P5.1 owns notifications.
+
+**Open decisions for the per-feature plan**:
+
+- Where review extraction runs (content-script vs offscreen). Per `CLAUDE.md` "Manifest V3 service-worker statelessness" + "content scripts = lightweight scrape only", the content script extracts and posts to background; background invokes pure-function scorer. No DOM access in background.
+- Review-block selectors that hold across the 8 supported locales. Snapshot fixtures live under `tests/fixtures/reviews/<locale>.html`.
+- Scoring weights table (locked at code-review time, not runtime-tunable in v0.2.x).
+- Score-display threshold (e.g., hide if `< 5` reviews available; show "insufficient data").
+- Privacy-policy diff: explicit statement that review text is read in-page only, never persisted, never transmitted.
+
+**Verification gates**: per-module unit ≥ 95% (`lib/review-authenticity.ts`); integration test with locale fixtures; SW-statelessness test; bundle delta within budget; coverage floor 91 maintained globally; privacy grep gate (`fetch|WebSocket|EventSource` clean for new files).
+
+> v0.2.x: US-locale only; remaining 7 locales tracked as follow-up.
 
 ### P5.4 — CWS review monitoring (passive)
 
