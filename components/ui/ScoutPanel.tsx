@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { browser } from 'wxt/browser';
 import { Card, CardContent, CardHeader } from './Card';
 import { Button } from './Button';
@@ -6,6 +6,8 @@ import { Bell, BellOff, LineChart, Loader2 } from 'lucide-react';
 import { PriceChart } from './PriceChart';
 import { get30DayPriceHistory, PriceRecord } from '../../lib/price-history';
 import type { ListEnrolledAlertsResponse } from '../../lib/messaging/types';
+import { extractReviews } from '../../lib/review-extractor';
+import type { AuthenticityResult } from '../../lib/types';
 
 export interface ScoutPanelProps {
   asin: string;
@@ -27,6 +29,9 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   const [historyData, setHistoryData] = useState<PriceRecord[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [notificationsAllowed, setNotificationsAllowed] = useState(true);
+  const authCacheRef = useRef<Map<string, AuthenticityResult>>(new Map());
+  const [authResult, setAuthResult] = useState<AuthenticityResult | null>(null);
+  const [whyExpanded, setWhyExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +69,39 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
       setIsEnrolled(isEnrolled); // revert on failure
     }
   };
+
+  useEffect(() => {
+    if (!_asin) {
+      setAuthResult(null);
+      return;
+    }
+    const cached = authCacheRef.current.get(_asin);
+    if (cached) {
+      setAuthResult(cached);
+      return;
+    }
+    const samples = extractReviews(document);
+    if (samples.length < 5) {
+      setAuthResult(null);
+      return;
+    }
+    let cancelled = false;
+    chrome.runtime
+      .sendMessage({ type: 'COMPUTE_AUTHENTICITY', payload: { asin: _asin, samples } })
+      .then((reply: { type: string; payload: AuthenticityResult } | undefined) => {
+        if (cancelled) return;
+        if (reply?.type === 'AUTHENTICITY_RESULT') {
+          authCacheRef.current.set(_asin, reply.payload);
+          setAuthResult(reply.payload);
+        }
+      })
+      .catch(() => {
+        /* swallow — extension can be reloaded mid-session */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [_asin]);
 
   useEffect(() => {
     let isMounted = true;
@@ -157,6 +195,32 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
             <PriceChart data={historyData} />
           ) : null}
         </div>
+
+        {authResult && authResult.sampleCount >= 5 && (
+          <div className="flex flex-col gap-1 mt-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>Reviews: {authResult.score}% authentic</span>
+              <span className="text-xs text-gray-400">
+                based on {authResult.sampleCount} visible reviews
+              </span>
+              {authResult.suspiciousIndices.length > 0 && (
+                <button
+                  onClick={() => setWhyExpanded((v) => !v)}
+                  className="text-xs underline text-blue-600 hover:text-blue-800"
+                >
+                  Why?
+                </button>
+              )}
+            </div>
+            {whyExpanded && (
+              <ul className="mt-1 pl-4 list-disc text-xs text-gray-600">
+                {authResult.suspiciousIndices.slice(0, 3).map((idx) => (
+                  <li key={idx}>{(authResult.reasons[idx] ?? []).join('; ')}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-2 mt-2">
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">

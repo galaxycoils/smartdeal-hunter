@@ -2,10 +2,17 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { ScoutPanel } from '../../../components/ui/ScoutPanel';
 import { get30DayPriceHistory } from '../../../lib/price-history';
+import type { ReviewSample } from '../../../lib/types';
 
 vi.mock('../../../lib/price-history', () => ({
   get30DayPriceHistory: vi.fn(),
 }));
+
+vi.mock('../../../lib/review-extractor', () => ({
+  extractReviews: vi.fn(() => []),
+}));
+
+import { extractReviews } from '../../../lib/review-extractor';
 
 declare const __chromeTestHarness: {
   setNotificationPermissionLevel: (level: 'granted' | 'denied') => void;
@@ -150,6 +157,129 @@ describe('ScoutPanel', () => {
       await waitFor(() => {
         const btn = screen.getByRole('button', { name: /watch/i }) as HTMLButtonElement;
         expect(btn.disabled).toBe(true);
+      });
+    });
+  });
+
+  describe('Review authenticity row', () => {
+    const makeReviewSamples = (count: number): ReviewSample[] =>
+      Array.from({ length: count }, (_, i) => ({
+        id: `r${i}`,
+        title: `Review ${i}`,
+        body: `Body content for review ${i}`.padEnd(50, '.'),
+        rating: 4,
+        date: '2024-01-01',
+        helpful: 0,
+        verified: true,
+      }));
+
+    beforeEach(() => {
+      vi.mocked(extractReviews).mockReturnValue([]);
+    });
+
+    it('row hidden when sampleCount < 5', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(3));
+      render(<ScoutPanel {...defaultProps} />);
+      // Let any async effects settle
+      await new Promise((r) => setTimeout(r, 20));
+      expect(screen.queryByText(/authentic/i)).toBeNull();
+    });
+
+    it('row visible with score and exact sample-size text', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(12));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: {
+          score: 78,
+          sampleCount: 12,
+          suspiciousIndices: [],
+          reasons: {},
+        },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      render(<ScoutPanel {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/78/)).toBeTruthy();
+        expect(screen.getByText('based on 12 visible reviews')).toBeTruthy();
+      });
+
+      // Must NOT claim totals
+      expect(screen.queryByText(/12 reviews total/i)).toBeNull();
+    });
+
+    it('"Why?" disclosure renders top 3 reasons and no more', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(10));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: {
+          score: 45,
+          sampleCount: 10,
+          suspiciousIndices: [0, 2, 5],
+          reasons: {
+            0: ['duplicate body content'],
+            2: ['5-star with very short body'],
+            5: ['posted in 24h cluster'],
+          },
+        },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      render(<ScoutPanel {...defaultProps} />);
+
+      await waitFor(() => expect(screen.getByText(/Why\?/i)).toBeTruthy());
+
+      fireEvent.click(screen.getByText(/Why\?/i));
+
+      expect(screen.getByText('duplicate body content')).toBeTruthy();
+      expect(screen.getByText('5-star with very short body')).toBeTruthy();
+      expect(screen.getByText('posted in 24h cluster')).toBeTruthy();
+    });
+
+    it('component cache: same ASIN triggers sendMessage once, new ASIN triggers again', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(8));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: { score: 70, sampleCount: 8, suspiciousIndices: [], reasons: {} },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      const { rerender } = render(<ScoutPanel {...defaultProps} asin="B012345678" />);
+
+      await waitFor(() =>
+        expect(chromeSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'COMPUTE_AUTHENTICITY' }),
+        ),
+      );
+
+      // Force re-render with same ASIN — should NOT trigger another sendMessage
+      rerender(<ScoutPanel {...defaultProps} asin="B012345678" />);
+      await new Promise((r) => setTimeout(r, 20));
+
+      const callsAfterSameAsin = chromeSendMessage.mock.calls.filter(
+        (c: unknown[]) =>
+          (c[0] as { type: string }).type === 'COMPUTE_AUTHENTICITY' &&
+          (c[0] as { payload: { asin: string } }).payload.asin === 'B012345678',
+      );
+      expect(callsAfterSameAsin).toHaveLength(1);
+
+      // Change ASIN — must trigger a new sendMessage
+      rerender(<ScoutPanel {...defaultProps} asin="B999999999" />);
+
+      await waitFor(() => {
+        const newAsinCalls = chromeSendMessage.mock.calls.filter(
+          (c: unknown[]) =>
+            (c[0] as { type: string }).type === 'COMPUTE_AUTHENTICITY' &&
+            (c[0] as { payload: { asin: string } }).payload.asin === 'B999999999',
+        );
+        expect(newAsinCalls).toHaveLength(1);
       });
     });
   });
