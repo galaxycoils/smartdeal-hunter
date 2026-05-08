@@ -1,0 +1,9 @@
+title: SmartDeal Hunter
+description: Privacy-first Chrome extension. On-device only.
+theme: jekyll-theme-minimal
+markdown: kramdown
+exclude:
+  - perf-baseline.json
+  - perf
+  - spec
+  - store-assets

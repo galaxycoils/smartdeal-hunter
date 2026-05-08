@@ -52,8 +52,8 @@ Privacy by design:
   (`script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`).
 * "Wipe All Data" + "Schedule Wipe" controls in the Privacy tab.
 
-Open source: https://github.com/tahamtandariush/smartdeal-hunter
-Privacy policy: https://github.com/tahamtandariush/smartdeal-hunter/blob/main/docs/privacy-policy.md
+Open source: https://github.com/galaxycoils/smartdeal-hunter
+Privacy policy: https://galaxycoils.github.io/smartdeal-hunter/privacy-policy.html
 Contact: tahamtandariush@gmail.com
 ```
 
@@ -64,7 +64,7 @@ Contact: tahamtandariush@gmail.com
 | Single purpose declaration                         | `Provide on-device scoring and price-history insights for products on Amazon retail pages. The extension activates only when the user explicitly clicks Quick Scout on an Amazon product page.` |
 | Data usage limits — disclosed                      | We collect no remote data. Local data (Genome, cache, price history) is encrypted on-device and never transmitted.                                                                              |
 | Data handling certification — comply with policies | Yes.                                                                                                                                                                                            |
-| Privacy policy URL                                 | `<HOST THIS BEFORE SUBMIT>` (canonical text in `docs/privacy-policy.md`; placeholder until user confirms hosting plan)                                                                          |
+| Privacy policy URL                                 | `https://galaxycoils.github.io/smartdeal-hunter/privacy-policy.html` (hosted via GitHub Pages from `main:/docs`; canonical source is `docs/privacy-policy.md`)                                  |
 
 ### Permission justifications (CWS dashboard accepts free text per permission)
 
