@@ -173,6 +173,44 @@ describe('PrivacyTab', () => {
     });
   });
 
+  describe('audit-log forward-compat (D14)', () => {
+    it("renders new 'review-authenticity-evaluated' kind without throwing", async () => {
+      await chrome.storage.local.set({
+        optInAuditLog: true,
+        'sdh:audit-log': [
+          {
+            ts: 1714003200000,
+            kind: 'review-authenticity-evaluated',
+            summary: 'asin=B07ABC123 n=12 score=78',
+          },
+        ],
+      });
+
+      render(<PrivacyTab />);
+
+      expect(await screen.findByText(/asin=B07ABC123/)).toBeInTheDocument();
+      expect(screen.getByText('review-authenticity-evaluated')).toBeInTheDocument();
+    });
+
+    it('renders unknown future kind without throwing', async () => {
+      const futureEntry = {
+        ts: 1714003200000,
+        kind: 'unknown-future-kind',
+        summary: 'placeholder',
+      } as unknown as import('../../../lib/audit-log').AuditLogEntry;
+
+      await chrome.storage.local.set({
+        optInAuditLog: true,
+        'sdh:audit-log': [futureEntry],
+      });
+
+      render(<PrivacyTab />);
+
+      expect(await screen.findByText('placeholder')).toBeInTheDocument();
+      expect(screen.getByText('unknown-future-kind')).toBeInTheDocument();
+    });
+  });
+
   describe('Price Alerts section', () => {
     it('shows empty state when no alerts enrolled', async () => {
       render(<PrivacyTab />);
