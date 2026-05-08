@@ -67,6 +67,21 @@ vi.mock('../../lib/price-alerts', () => ({
   ALARM_NAME: 'sdh:price-check',
 }));
 
+vi.mock('../../lib/review-authenticity', () => ({
+  calculateAuthenticityScore: vi.fn().mockReturnValue({
+    score: 72,
+    sampleCount: 10,
+    suspiciousIndices: [],
+    reasons: {},
+  }),
+}));
+
+vi.mock('../../lib/audit-log', () => ({
+  appendAuditLog: vi.fn().mockResolvedValue(undefined),
+  getAuditLogEntries: vi.fn().mockResolvedValue([]),
+  AUDIT_LOG_KEY: 'sdh:audit-log',
+}));
+
 import background from '../../entrypoints/background';
 import { loadGenome, saveGenome } from '../../lib/genome';
 import { getCachedProduct, cacheProduct } from '../../lib/cache';
@@ -79,6 +94,8 @@ import {
   listEnrolledAlerts,
   checkAllAlerts,
 } from '../../lib/price-alerts';
+import { calculateAuthenticityScore } from '../../lib/review-authenticity';
+import { appendAuditLog } from '../../lib/audit-log';
 
 type Listener = (msg: unknown, sender: unknown, sendResponse: (r: unknown) => void) => unknown;
 
@@ -507,6 +524,77 @@ describe('Background Service Worker', () => {
       expect(sendResponse).toHaveBeenCalledWith(
         expect.objectContaining({ success: false, error: 'Failed to compute scores' }),
       );
+    });
+  });
+
+  describe('COMPUTE_AUTHENTICITY handler', () => {
+    const syntheticSamples = Array.from({ length: 10 }, (_, i) => ({
+      rating: 4,
+      body: `Review body number ${i} with unique text to avoid similarity`,
+      date: `January ${i + 1}, 2024`,
+      verified: true,
+      helpful: i,
+    }));
+
+    const baseRequest = {
+      type: 'COMPUTE_AUTHENTICITY' as const,
+      payload: { asin: 'B0TEST1234', samples: syntheticSamples },
+    };
+
+    it('returns AUTHENTICITY_RESULT with score (0-100) and correct sampleCount', async () => {
+      const sendResponse = vi.fn();
+      listener(baseRequest, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(calculateAuthenticityScore).toHaveBeenCalledWith(syntheticSamples);
+      expect(sendResponse).toHaveBeenCalledWith({
+        type: 'AUTHENTICITY_RESULT',
+        payload: expect.objectContaining({
+          score: expect.any(Number),
+          sampleCount: 10,
+        }),
+      });
+      const { payload } = sendResponse.mock.calls[0][0] as { payload: { score: number } };
+      expect(payload.score).toBeGreaterThanOrEqual(0);
+      expect(payload.score).toBeLessThanOrEqual(100);
+    });
+
+    it('appends audit-log entry when optInAuditLog is true', async () => {
+      await chrome.storage.local.set({ optInAuditLog: true });
+      const sendResponse = vi.fn();
+      listener(baseRequest, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(appendAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'review-authenticity-evaluated',
+          summary: expect.stringMatching(/asin=B0TEST1234 n=\d+ score=\d+/),
+        }),
+      );
+    });
+
+    it('does NOT append audit-log entry when optInAuditLog is false', async () => {
+      await chrome.storage.local.set({ optInAuditLog: false });
+      vi.mocked(appendAuditLog).mockClear();
+      const sendResponse = vi.fn();
+      listener(baseRequest, {}, sendResponse);
+      await flush();
+      await flush();
+      expect(appendAuditLog).not.toHaveBeenCalled();
+    });
+
+    it('produces identical responses on two calls (no module-level cache)', async () => {
+      const sr1 = vi.fn();
+      const sr2 = vi.fn();
+      listener(baseRequest, {}, sr1);
+      await flush();
+      await flush();
+      listener(baseRequest, {}, sr2);
+      await flush();
+      await flush();
+      expect(sr1).toHaveBeenCalledTimes(1);
+      expect(sr2).toHaveBeenCalledTimes(1);
+      expect(sr1.mock.calls[0][0]).toEqual(sr2.mock.calls[0][0]);
     });
   });
 

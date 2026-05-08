@@ -9,7 +9,10 @@ import type {
   UpdateGenomeRequest,
   EnrollAlertRequest,
   DisenrollAlertRequest,
+  ComputeAuthenticityRequest,
 } from '../lib/messaging/types';
+import { calculateAuthenticityScore } from '../lib/review-authenticity';
+import { appendAuditLog } from '../lib/audit-log';
 import { loadGenome, onGenomeChange, saveGenome } from '../lib/genome';
 import { deriveKey } from '../lib/crypto';
 import { cacheProduct, getCachedProduct } from '../lib/cache';
@@ -116,6 +119,17 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (message.type === 'COMPUTE_AUTHENTICITY') {
+      const msg = message as ComputeAuthenticityRequest;
+      handleComputeAuthenticity(msg.payload.asin, msg.payload.samples)
+        .then((res) => sendResponse(res))
+        .catch((err) => {
+          console.error('[smartdeal-hunter] Authenticity handler failed', err);
+          sendResponse({ success: false, error: err.message });
+        });
+      return true;
+    }
+
     if (message.type === 'SCRAPE_REQUEST') {
       const msg = message as ScrapeRequest;
       // Handle the orchestration async
@@ -170,6 +184,21 @@ export default defineBackground(() => {
     const updatedGenome = calculateFeedbackUpdate(genome, productVector, feedbackType);
     await saveGenome(updatedGenome, key);
     return true;
+  }
+
+  async function handleComputeAuthenticity(
+    asin: string,
+    samples: import('../lib/types').ReviewSample[],
+  ): Promise<{ type: 'AUTHENTICITY_RESULT'; payload: import('../lib/types').AuthenticityResult }> {
+    const result = calculateAuthenticityScore(samples);
+    const { optInAuditLog = false } = await chrome.storage.local.get({ optInAuditLog: false });
+    if (optInAuditLog) {
+      await appendAuditLog({
+        kind: 'review-authenticity-evaluated',
+        summary: `asin=${asin} n=${result.sampleCount} score=${result.score}`,
+      });
+    }
+    return { type: 'AUTHENTICITY_RESULT', payload: result };
   }
 
   async function handleScrapeRequest(

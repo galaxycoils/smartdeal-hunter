@@ -103,7 +103,7 @@ export type OffscreenMessage =
   | DataWipedMessage;
 export interface ComputeAuthenticityRequest {
   type: 'COMPUTE_AUTHENTICITY';
-  payload: { samples: ReviewSample[] };
+  payload: { asin: string; samples: ReviewSample[] };
 }
 
 export interface AuthenticityResultMessage {
