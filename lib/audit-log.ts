@@ -3,7 +3,12 @@ const AUDIT_LOG_LIMIT = 500;
 
 export interface AuditLogEntry {
   ts: number;
-  kind: 'deep-check' | 'price-alert-enroll' | 'price-alert-disenroll' | 'price-alert-fired';
+  kind:
+    | 'deep-check'
+    | 'price-alert-enroll'
+    | 'price-alert-disenroll'
+    | 'price-alert-fired'
+    | 'review-authenticity-evaluated';
   summary: string;
 }
 

@@ -1,4 +1,4 @@
-import type { ProductData, Genome } from '../types';
+import type { ProductData, Genome, ReviewSample, AuthenticityResult } from '../types';
 
 export interface ExecuteScraperRequest {
   type: 'EXECUTE_SCRAPER';
@@ -101,10 +101,22 @@ export type OffscreenMessage =
   | ScoreResultResponse
   | ComputeScoresError
   | DataWipedMessage;
+export interface ComputeAuthenticityRequest {
+  type: 'COMPUTE_AUTHENTICITY';
+  payload: { samples: ReviewSample[] };
+}
+
+export interface AuthenticityResultMessage {
+  type: 'AUTHENTICITY_RESULT';
+  payload: AuthenticityResult;
+}
+
 export type PopupMessage =
   | ScrapeRequest
   | DataWipedMessage
   | EnrollAlertRequest
   | DisenrollAlertRequest
   | ListEnrolledAlertsRequest
-  | ListEnrolledAlertsResponse;
+  | ListEnrolledAlertsResponse
+  | ComputeAuthenticityRequest
+  | AuthenticityResultMessage;

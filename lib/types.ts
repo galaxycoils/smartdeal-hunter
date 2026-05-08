@@ -71,3 +71,20 @@ export interface ProductData {
   unitPrice: number | null;
   quantity: number | null;
 }
+
+export interface ReviewSample {
+  id: string; // DOM id attribute or fallback hash
+  title: string; // textContent only; max 200 chars
+  body: string; // textContent only; truncated to 2 KB
+  rating: number; // integer 1-5
+  date: string; // raw textContent of date element
+  helpful: number; // helpful-vote count; 0 if absent
+  verified: boolean; // true only if "Verified Purchase" detected
+}
+
+export interface AuthenticityResult {
+  score: number; // 0-100 integer; 50 when sampleCount < 5
+  sampleCount: number;
+  suspiciousIndices: number[]; // sorted by descending suspicion
+  reasons: Record<number, string[]>; // index → list of human-readable reasons
+}
