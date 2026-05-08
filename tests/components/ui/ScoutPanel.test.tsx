@@ -241,6 +241,96 @@ describe('ScoutPanel', () => {
       expect(screen.getByText('posted in 24h cluster')).toBeTruthy();
     });
 
+    it('"Why?" disclosure falls back to empty string when reasons entry is missing for index', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(10));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: {
+          score: 40,
+          sampleCount: 10,
+          suspiciousIndices: [0, 1],
+          reasons: {
+            0: ['short review body'],
+            // index 1 deliberately missing — exercises the `?? []` fallback
+          },
+        },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      render(<ScoutPanel {...defaultProps} />);
+
+      await waitFor(() => expect(screen.getByText(/Why\?/i)).toBeTruthy());
+      fireEvent.click(screen.getByText(/Why\?/i));
+
+      // First index renders reason text
+      expect(screen.getByText('short review body')).toBeTruthy();
+      // Second index with missing reasons renders an empty li (no throw)
+      const listItems = document.querySelectorAll('li');
+      expect(listItems.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('null ASIN clears authenticity result', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(8));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: { score: 72, sampleCount: 8, suspiciousIndices: [], reasons: {} },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      const { rerender } = render(<ScoutPanel {...defaultProps} asin="B012345678" />);
+
+      await waitFor(() => expect(screen.queryByText(/72/)).toBeTruthy());
+
+      // Re-render with empty ASIN — exercises the `if (!_asin)` guard (lines 75-76)
+      rerender(<ScoutPanel {...defaultProps} asin="" />);
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(screen.queryByText(/authentic/i)).toBeNull();
+    });
+
+    it('cache-hit on ASIN revisit: sendMessage called once per unique ASIN', async () => {
+      vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(8));
+      const chromeSendMessage = vi.fn().mockResolvedValue({
+        type: 'AUTHENTICITY_RESULT',
+        payload: { score: 65, sampleCount: 8, suspiciousIndices: [], reasons: {} },
+      });
+      (
+        globalThis as unknown as { chrome: { runtime: { sendMessage: unknown } } }
+      ).chrome.runtime.sendMessage = chromeSendMessage;
+
+      const { rerender } = render(<ScoutPanel {...defaultProps} asin="B000000001" />);
+
+      await waitFor(() =>
+        expect(chromeSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'COMPUTE_AUTHENTICITY' }),
+        ),
+      );
+
+      // Switch to a different ASIN (B000000002)
+      rerender(<ScoutPanel {...defaultProps} asin="B000000002" />);
+      await waitFor(() => {
+        const calls = chromeSendMessage.mock.calls.filter(
+          (c: unknown[]) => (c[0] as { payload: { asin: string } }).payload?.asin === 'B000000002',
+        );
+        expect(calls).toHaveLength(1);
+      });
+
+      // Switch back to B000000001 — exercises lines 80-81 (cache hit path)
+      rerender(<ScoutPanel {...defaultProps} asin="B000000001" />);
+      await new Promise((r) => setTimeout(r, 30));
+
+      const asin1Calls = chromeSendMessage.mock.calls.filter(
+        (c: unknown[]) => (c[0] as { payload: { asin: string } }).payload?.asin === 'B000000001',
+      );
+      // Must still be exactly 1 (second visit used cache, no extra sendMessage)
+      expect(asin1Calls).toHaveLength(1);
+      expect(screen.queryByText(/65/)).toBeTruthy();
+    });
+
     it('component cache: same ASIN triggers sendMessage once, new ASIN triggers again', async () => {
       vi.mocked(extractReviews).mockReturnValue(makeReviewSamples(8));
       const chromeSendMessage = vi.fn().mockResolvedValue({

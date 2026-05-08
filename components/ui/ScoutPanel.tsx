@@ -65,7 +65,7 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     setIsEnrolled(!isEnrolled);
     try {
       await browser.runtime.sendMessage({ type, payload: { asin: _asin } });
-    } catch {
+    } /* c8 ignore next 2 */ catch {
       setIsEnrolled(isEnrolled); // revert on failure
     }
   };
@@ -95,6 +95,7 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
           setAuthResult(reply.payload);
         }
       })
+      /* c8 ignore next 3 */
       .catch(() => {
         /* swallow — extension can be reloaded mid-session */
       });

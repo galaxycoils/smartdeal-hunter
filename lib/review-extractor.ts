@@ -27,6 +27,7 @@ function parseRating(el: Element): number | null {
     if (!match) return null;
     const val = Math.round(parseFloat(match[1]));
     return val >= 1 && val <= 5 ? val : null;
+    /* istanbul ignore next -- defensive catch, not reachable in JSDOM/happy-dom */
   } catch {
     return null;
   }
